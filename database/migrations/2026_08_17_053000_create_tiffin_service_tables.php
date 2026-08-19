@@ -28,6 +28,10 @@ return new class extends Migration
             $table->decimal('longitude', 11, 8)->nullable();
             $table->time('opening_time');
             $table->time('closing_time');
+            $table->string('bank_account_holder')->nullable();
+            $table->string('bank_account_number')->nullable();
+            $table->string('bank_ifsc')->nullable();
+            $table->string('bank_branch')->nullable();
             $table->enum('status', ['ACTIVE', 'INACTIVE', 'BLOCKED', 'PENDING_APPROVAL'])->default('PENDING_APPROVAL');
             $table->timestamps();
             $table->softDeletes();

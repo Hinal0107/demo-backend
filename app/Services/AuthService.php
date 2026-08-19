@@ -58,6 +58,10 @@ class AuthService
                     'pincode' => $data['restaurant_pincode'] ?? '000000',
                     'opening_time' => '09:00:00',
                     'closing_time' => '21:00:00',
+                    'bank_account_holder' => $data['bank_account_holder'] ?? null,
+                    'bank_account_number' => $data['bank_account_number'] ?? null,
+                    'bank_ifsc' => $data['bank_ifsc'] ?? null,
+                    'bank_branch' => $data['bank_branch'] ?? null,
                     'status' => 'PENDING_APPROVAL',
                 ]);
 

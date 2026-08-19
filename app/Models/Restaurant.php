@@ -25,6 +25,10 @@ class Restaurant extends Model
         'longitude',
         'opening_time',
         'closing_time',
+        'bank_account_holder',
+        'bank_account_number',
+        'bank_ifsc',
+        'bank_branch',
         'status',
     ];
 

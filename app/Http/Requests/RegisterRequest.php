@@ -26,6 +26,11 @@ class RegisterRequest extends FormRequest
             'restaurant_state' => 'required_if:role,restaurant|string|max:100',
             'restaurant_country' => 'required_if:role,restaurant|string|max:100',
             'restaurant_pincode' => 'required_if:role,restaurant|string|max:20',
+            // Bank Details
+            'bank_account_holder' => 'nullable|string|max:255',
+            'bank_account_number' => 'nullable|string|max:50',
+            'bank_ifsc' => 'nullable|string|max:20',
+            'bank_branch' => 'nullable|string|max:255',
         ];
     }
 }
