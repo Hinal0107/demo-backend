@@ -17,6 +17,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'auth.firebase' => \App\Http\Middleware\AuthenticateFirebase::class,
             'role' => \App\Http\Middleware\AuthorizeRole::class,
             'restaurant.isolation' => \App\Http\Middleware\EnforceRestaurantIsolation::class,
+            'auth.restaurant' => \App\Http\Middleware\AuthenticateRestaurant::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

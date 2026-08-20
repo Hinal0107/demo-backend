@@ -185,7 +185,65 @@ class NotificationService
     }
 
     /**
-     * Dispatch notification payload to Firebase FCM.
+     * Retrieve the Google OAuth2 access token, signed with the Firebase service account private key.
+     * Caches the token for 55 minutes to avoid redundant remote requests.
+     */
+    protected function getAccessToken(): ?string
+    {
+        $cacheKey = 'firebase_fcm_access_token';
+        
+        $token = \Illuminate\Support\Facades\Cache::get($cacheKey);
+        if ($token) {
+            return $token;
+        }
+
+        $filePath = config('services.firebase.credentials_path');
+        if (!$filePath || !file_exists($filePath)) {
+            Log::error("Firebase credentials file not found at: " . ($filePath ?: 'null'));
+            return null;
+        }
+
+        try {
+            $credentials = json_decode(file_get_contents($filePath), true);
+            if (!$credentials || !isset($credentials['private_key']) || !isset($credentials['client_email'])) {
+                Log::error("Invalid Firebase credentials file format.");
+                return null;
+            }
+
+            $now = time();
+            $payload = [
+                'iss' => $credentials['client_email'],
+                'sub' => $credentials['client_email'],
+                'aud' => 'https://oauth2.googleapis.com/token',
+                'iat' => $now,
+                'exp' => $now + 3600,
+                'scope' => 'https://www.googleapis.com/auth/firebase.messaging',
+            ];
+
+            $jwt = \Firebase\JWT\JWT::encode($payload, $credentials['private_key'], 'RS256');
+
+            $response = Http::asForm()->post('https://oauth2.googleapis.com/token', [
+                'grant_type' => 'urn:ietf:params:oauth:grant-type:jwt-bearer',
+                'assertion' => $jwt,
+            ]);
+
+            if ($response->successful()) {
+                $data = $response->json();
+                $accessToken = $data['access_token'];
+                \Illuminate\Support\Facades\Cache::put($cacheKey, $accessToken, now()->addMinutes(55));
+                return $accessToken;
+            }
+
+            Log::error("Google OAuth2 token generation failed: " . $response->body());
+        } catch (Exception $e) {
+            Log::error("Error generating Google OAuth2 Token: " . $e->getMessage());
+        }
+
+        return null;
+    }
+
+    /**
+     * Dispatch notification payload to Firebase FCM using HTTP v1 API.
      */
     protected function sendFCM(array $tokens, string $title, string $message, array $data): void
     {
@@ -197,28 +255,38 @@ class NotificationService
             'data' => $data,
         ]);
 
-        $fcmKey = env('FCM_SERVER_KEY');
-        if (!$fcmKey) {
-            return; // Sandbox logging is enough
+        $accessToken = $this->getAccessToken();
+        if (!$accessToken) {
+            Log::warning('FCM HTTP v1: No access token available. Skipping FCM transmission.');
+            return;
         }
 
-        try {
-            // FCM Legacy or HTTP V1 Dispatch
-            Http::withHeaders([
-                'Authorization' => 'key=' . $fcmKey,
-                'Content-Type' => 'application/json',
-            ])->post('https://fcm.googleapis.com/fcm/send', [
-                'registration_ids' => $tokens,
-                'notification' => [
-                    'title' => $title,
-                    'body' => $message,
-                    'sound' => 'default',
-                ],
-                'data' => $data,
-                'priority' => 'high',
-            ]);
-        } catch (Exception $e) {
-            Log::error('FCM Transmission Failure: ' . $e->getMessage());
+        $projectId = config('services.firebase.project_id') ?: 'kinkitchen-51b17';
+        $url = "https://fcm.googleapis.com/v1/projects/{$projectId}/messages:send";
+
+        foreach ($tokens as $token) {
+            try {
+                $response = Http::withHeaders([
+                    'Authorization' => 'Bearer ' . $accessToken,
+                    'Content-Type' => 'application/json',
+                ])->post($url, [
+                    'message' => [
+                        'token' => $token,
+                        'notification' => [
+                            'title' => $title,
+                            'body' => $message,
+                        ],
+                        // FCM HTTP v1 requires all values in the 'data' array to be strings
+                        'data' => array_map('strval', $data),
+                    ],
+                ]);
+
+                if (!$response->successful()) {
+                    Log::error("FCM HTTP v1 transmission failed for token {$token}: " . $response->body());
+                }
+            } catch (Exception $e) {
+                Log::error("FCM Transmission Failure for token {$token}: " . $e->getMessage());
+            }
         }
     }
 }

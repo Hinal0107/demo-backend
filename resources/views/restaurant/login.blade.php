@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Super Admin Login</title>
+    <title>Restaurant Manager Login</title>
     <style>
         :root {
             --bg-primary: #f8fafc;
@@ -42,7 +42,6 @@
             padding: 40px;
             width: 100%;
             max-width: 420px;
-            backdrop-filter: blur(10px);
             box-shadow: 0 15px 35px rgba(0, 0, 0, 0.05);
         }
 
@@ -122,9 +121,9 @@
             border-radius: 8px;
             margin-bottom: 20px;
             font-size: 13px;
-            background-color: rgba(239, 68, 68, 0.15);
+            background-color: rgba(220, 38, 38, 0.1);
             color: var(--danger);
-            border: 1px solid rgba(239, 68, 68, 0.3);
+            border: 1px solid rgba(220, 38, 38, 0.2);
         }
     </style>
 </head>
@@ -132,8 +131,8 @@
 
     <div class="login-card">
         <div class="card-header">
-            <div class="logo">Tiffin Admin</div>
-            <div class="subtitle">Sign in to manage the platform</div>
+            <div class="logo">Kitchen Partner</div>
+            <div class="subtitle">Sign in to manage your kitchen portal</div>
         </div>
 
         @if($errors->any())
@@ -142,11 +141,11 @@
             </div>
         @endif
 
-        <form action="{{ route('admin.login.submit') }}" method="POST">
+        <form action="{{ route('restaurant.login.submit') }}" method="POST">
             @csrf
             <div class="form-group">
                 <label class="form-label" for="email">Email Address</label>
-                <input class="form-control" type="email" id="email" name="email" required autofocus placeholder="admin@tiffin.com">
+                <input class="form-control" type="email" id="email" name="email" required autofocus placeholder="restaurant@tiffin.com">
             </div>
 
             <div class="form-group">

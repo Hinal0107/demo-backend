@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>@yield('title', 'Tiffin Service Admin Portal')</title>
-    <!-- Custom Modern Vanilla CSS Styling -->
+    <title>@yield('title', 'Tiffin Service Restaurant Portal')</title>
+    <!-- Custom Modern Vanilla CSS Styling matching orange/green/white theme -->
     <style>
         :root {
             --bg-primary: #f8fafc;
@@ -91,7 +91,7 @@
 
         .menu-item.active a {
             background: var(--accent-gradient);
-            color: var(--text-primary);
+            color: white;
             box-shadow: var(--accent-glow);
         }
 
@@ -115,7 +115,17 @@
             font-weight: 700;
         }
 
-        /* Glassmorphic Stats Grid */
+        .restaurant-badge {
+            background-color: rgba(249, 115, 22, 0.1);
+            color: var(--accent-primary);
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 14px;
+            border: 1px solid rgba(249, 115, 22, 0.2);
+        }
+
+        /* Stats Grid */
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
@@ -131,13 +141,12 @@
             display: flex;
             flex-direction: column;
             gap: 10px;
-            backdrop-filter: blur(10px);
             transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
 
         .stat-card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
             border-color: var(--accent-primary);
         }
 
@@ -157,13 +166,12 @@
             -webkit-text-fill-color: transparent;
         }
 
-        /* Beautiful Tables */
+        /* Tables */
         .table-container {
             background: var(--bg-card);
             border: 1px solid var(--border-color);
             border-radius: 12px;
             overflow: hidden;
-            backdrop-filter: blur(10px);
             margin-bottom: 40px;
         }
 
@@ -212,7 +220,7 @@
             background-color: rgba(0, 0, 0, 0.015);
         }
 
-        /* UI Badges */
+        /* Badges */
         .badge {
             display: inline-block;
             padding: 5px 10px;
@@ -224,30 +232,30 @@
         }
 
         .badge-success {
-            background-color: rgba(16, 185, 129, 0.15);
+            background-color: rgba(22, 163, 74, 0.1);
             color: var(--success);
-            border: 1px solid rgba(16, 185, 129, 0.3);
+            border: 1px solid rgba(22, 163, 74, 0.2);
         }
 
         .badge-warning {
-            background-color: rgba(245, 158, 11, 0.15);
+            background-color: rgba(202, 138, 4, 0.1);
             color: var(--warning);
-            border: 1px solid rgba(245, 158, 11, 0.3);
+            border: 1px solid rgba(202, 138, 4, 0.2);
         }
 
         .badge-danger {
-            background-color: rgba(239, 68, 68, 0.15);
+            background-color: rgba(220, 38, 38, 0.1);
             color: var(--danger);
-            border: 1px solid rgba(239, 68, 68, 0.3);
+            border: 1px solid rgba(220, 38, 38, 0.2);
         }
 
         .badge-info {
-            background-color: rgba(6, 182, 212, 0.15);
+            background-color: rgba(8, 145, 178, 0.1);
             color: var(--info);
-            border: 1px solid rgba(6, 182, 212, 0.3);
+            border: 1px solid rgba(8, 145, 178, 0.2);
         }
 
-        /* Form elements & buttons */
+        /* Buttons & Forms */
         .btn {
             display: inline-block;
             padding: 10px 20px;
@@ -271,6 +279,15 @@
             opacity: 0.95;
         }
 
+        .btn-success {
+            background-color: var(--success);
+            color: white;
+        }
+
+        .btn-success:hover {
+            opacity: 0.9;
+        }
+
         .btn-secondary {
             background-color: transparent;
             color: var(--text-secondary);
@@ -280,12 +297,13 @@
         .btn-secondary:hover {
             color: var(--text-primary);
             border-color: var(--text-primary);
+            background-color: rgba(0, 0, 0, 0.02);
         }
 
         .btn-danger {
-            background-color: rgba(239, 68, 68, 0.2);
+            background-color: rgba(220, 38, 38, 0.1);
             color: var(--danger);
-            border: 1px solid rgba(239, 68, 68, 0.4);
+            border: 1px solid rgba(220, 38, 38, 0.2);
         }
 
         .btn-danger:hover {
@@ -321,24 +339,6 @@
             color: var(--text-secondary);
         }
 
-        /* Filter block style */
-        .filter-card {
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 30px;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 15px;
-            align-items: flex-end;
-        }
-
-        .filter-item {
-            flex: 1;
-            min-width: 180px;
-        }
-
         .alert {
             padding: 15px 20px;
             border-radius: 8px;
@@ -348,15 +348,15 @@
         }
 
         .alert-success {
-            background-color: rgba(16, 185, 129, 0.15);
+            background-color: rgba(22, 163, 74, 0.1);
             color: var(--success);
-            border: 1px solid rgba(16, 185, 129, 0.3);
+            border: 1px solid rgba(22, 163, 74, 0.2);
         }
 
-        .alert-error {
-            background-color: rgba(239, 68, 68, 0.15);
+        .alert-danger {
+            background-color: rgba(220, 38, 38, 0.1);
             color: var(--danger);
-            border: 1px solid rgba(239, 68, 68, 0.3);
+            border: 1px solid rgba(220, 38, 38, 0.2);
         }
     </style>
     @yield('styles')
@@ -365,32 +365,29 @@
 
     <!-- Sidebar -->
     <div class="sidebar">
-        <div class="sidebar-logo">Tiffin Admin</div>
+        <div class="sidebar-logo">Kitchen Admin</div>
         <ul class="menu-list">
-            <li class="menu-item {{ Request::routeIs('admin.dashboard') ? 'active' : '' }}">
-                <a href="{{ route('admin.dashboard') }}">Dashboard</a>
+            <li class="menu-item {{ Request::routeIs('restaurant.dashboard') ? 'active' : '' }}">
+                <a href="{{ route('restaurant.dashboard') }}">Dashboard</a>
             </li>
-            <li class="menu-item {{ Request::routeIs('admin.restaurants.*') ? 'active' : '' }}">
-                <a href="{{ route('admin.restaurants.index') }}">Restaurants</a>
+            <li class="menu-item {{ Request::routeIs('restaurant.orders.*') ? 'active' : '' }}">
+                <a href="{{ route('restaurant.orders.index') }}">Orders</a>
             </li>
-            <li class="menu-item {{ Request::routeIs('admin.customers.*') ? 'active' : '' }}">
-                <a href="{{ route('admin.customers.index') }}">Customers</a>
+            <li class="menu-item {{ Request::routeIs('restaurant.categories.*') ? 'active' : '' }}">
+                <a href="{{ route('restaurant.categories.index') }}">Menu Categories</a>
             </li>
-            <li class="menu-item {{ Request::routeIs('admin.orders.*') ? 'active' : '' }}">
-                <a href="{{ route('admin.orders.index') }}">Orders</a>
+            <li class="menu-item {{ Request::routeIs('restaurant.menu-items.*') ? 'active' : '' }}">
+                <a href="{{ route('restaurant.menu-items.index') }}">Menu Items</a>
             </li>
-            <li class="menu-item {{ Request::routeIs('admin.payments.*') ? 'active' : '' }}">
-                <a href="{{ route('admin.payments.index') }}">Payments</a>
+            <li class="menu-item {{ Request::routeIs('restaurant.subscriptions.*') ? 'active' : '' }}">
+                <a href="{{ route('restaurant.subscriptions.index') }}">Subscriptions</a>
             </li>
-            <li class="menu-item {{ Request::routeIs('admin.subscriptions.*') ? 'active' : '' }}">
-                <a href="{{ route('admin.subscriptions.index') }}">Subscriptions</a>
-            </li>
-            <li class="menu-item {{ Request::routeIs('admin.notifications.*') ? 'active' : '' }}">
-                <a href="{{ route('admin.notifications.show') }}">Broadcast Push</a>
+            <li class="menu-item {{ Request::routeIs('restaurant.profile') ? 'active' : '' }}">
+                <a href="{{ route('restaurant.profile') }}">My Profile</a>
             </li>
         </ul>
         <div style="padding: 0 15px;">
-            <a href="{{ route('admin.logout') }}" class="btn btn-secondary" style="width: 100%; text-align: center; display: block;">Log Out</a>
+            <a href="{{ route('restaurant.logout') }}" class="btn btn-secondary" style="width: 100%; text-align: center; display: block;">Log Out</a>
         </div>
     </div>
 
@@ -400,7 +397,7 @@
             <div class="alert alert-success">{{ session('success') }}</div>
         @endif
         @if($errors->any())
-            <div class="alert alert-danger" style="background-color: rgba(239, 68, 68, 0.15); color: var(--danger); border: 1px solid rgba(239, 68, 68, 0.3); list-style: none;">
+            <div class="alert alert-danger">
                 {{ $errors->first() }}
             </div>
         @endif

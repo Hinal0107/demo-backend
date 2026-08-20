@@ -35,4 +35,9 @@ return [
         ],
     ],
 
+    'firebase' => [
+        'project_id' => env('FIREBASE_PROJECT_ID', 'kinkitchen-51b17'),
+        'credentials_path' => base_path(env('FIREBASE_CREDENTIALS_PATH', 'storage/app/firebase/firebase_credentials.json')),
+    ],
+
 ];

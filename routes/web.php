@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\AdminOrderController;
 use App\Http\Controllers\Admin\AdminPaymentController;
 use App\Http\Controllers\Admin\AdminSubscriptionController;
 use App\Http\Controllers\Payments\WorldpayController;
+use App\Http\Controllers\Restaurant\RestaurantWebController;
 
 Route::get('/', function () {
     return redirect()->route('admin.login');
@@ -48,4 +49,39 @@ Route::middleware([\App\Http\Middleware\AuthenticateAdmin::class])->prefix('admi
     // Push notifications broadcast
     Route::get('notifications', [AdminDashboardController::class, 'showNotifications'])->name('notifications.show');
     Route::post('notifications/send', [AdminDashboardController::class, 'sendNotification'])->name('notifications.send');
+});
+
+// Restaurant Authentication Guest Routes
+Route::get('/restaurant/login', [RestaurantWebController::class, 'showLogin'])->name('restaurant.login');
+Route::post('/restaurant/login', [RestaurantWebController::class, 'login'])->name('restaurant.login.submit');
+Route::get('/restaurant/logout', [RestaurantWebController::class, 'logout'])->name('restaurant.logout');
+
+// Protected Restaurant Dashboard Routes
+Route::middleware(['auth.restaurant'])->prefix('restaurant')->name('restaurant.')->group(function () {
+    // Overview Dashboard
+    Route::get('/dashboard', [RestaurantWebController::class, 'index'])->name('dashboard');
+    
+    // Update Restaurant Profile details
+    Route::get('/profile', [RestaurantWebController::class, 'showProfile'])->name('profile');
+    Route::post('/profile', [RestaurantWebController::class, 'updateProfile'])->name('profile.update');
+    
+    // Menu Categories Management
+    Route::get('/categories', [RestaurantWebController::class, 'categoriesIndex'])->name('categories.index');
+    Route::post('/categories', [RestaurantWebController::class, 'categoriesStore'])->name('categories.store');
+    Route::post('/categories/{id}', [RestaurantWebController::class, 'categoriesUpdate'])->name('categories.update');
+    Route::post('/categories/{id}/delete', [RestaurantWebController::class, 'categoriesDestroy'])->name('categories.destroy');
+    
+    // Menu Items Management
+    Route::get('/menu-items', [RestaurantWebController::class, 'menuItemsIndex'])->name('menu-items.index');
+    Route::post('/menu-items', [RestaurantWebController::class, 'menuItemsStore'])->name('menu-items.store');
+    Route::post('/menu-items/{id}', [RestaurantWebController::class, 'menuItemsUpdate'])->name('menu-items.update');
+    Route::post('/menu-items/{id}/delete', [RestaurantWebController::class, 'menuItemsDestroy'])->name('menu-items.destroy');
+    
+    // Orders management (real-time order listing & status triggers)
+    Route::get('/orders', [RestaurantWebController::class, 'ordersIndex'])->name('orders.index');
+    Route::get('/orders/{id}', [RestaurantWebController::class, 'ordersShow'])->name('orders.show');
+    Route::post('/orders/{id}/status', [RestaurantWebController::class, 'ordersUpdateStatus'])->name('orders.status');
+    
+    // Active Subscriptions
+    Route::get('/subscriptions', [RestaurantWebController::class, 'subscriptionsIndex'])->name('subscriptions.index');
 });
