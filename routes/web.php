@@ -49,6 +49,7 @@ Route::middleware([\App\Http\Middleware\AuthenticateAdmin::class])->prefix('admi
     // Push notifications broadcast
     Route::get('notifications', [AdminDashboardController::class, 'showNotifications'])->name('notifications.show');
     Route::post('notifications/send', [AdminDashboardController::class, 'sendNotification'])->name('notifications.send');
+    Route::get('notifications/monitor', [AdminDashboardController::class, 'monitorNotifications'])->name('notifications.monitor');
 });
 
 // Restaurant Authentication Guest Routes

@@ -113,7 +113,11 @@ Route::prefix('v1')->group(function () {
 
         // Common Notifications & Tokens
         Route::post('/notifications/token', [FcmTokenController::class, 'store']);
+        Route::post('/devices/register', [FcmTokenController::class, 'register']);
+        Route::post('/devices/unregister', [FcmTokenController::class, 'unregister']);
         Route::get('/notifications', [NotificationController::class, 'index']);
+        Route::get('/notifications/unread-count', [NotificationController::class, 'unreadCount']);
+        Route::post('/notifications/read', [NotificationController::class, 'read']);
         Route::post('/notifications/{id}/read', [NotificationController::class, 'read']);
         Route::post('/notifications/read-all', [NotificationController::class, 'readAll']);
 

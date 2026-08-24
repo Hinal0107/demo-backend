@@ -9,3 +9,4 @@ Artisan::command('inspire', function () {
 
 use Illuminate\Support\Facades\Schedule;
 Schedule::command('app:generate-subscription-orders')->daily();
+Schedule::command('app:send-subscription-expiry-reminders')->daily();

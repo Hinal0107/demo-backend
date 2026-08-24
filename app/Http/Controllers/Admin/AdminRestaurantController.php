@@ -170,6 +170,13 @@ class AdminRestaurantController extends Controller
         $restaurant->status = $request->input('status');
         $restaurant->save();
 
+        // Dispatch status events
+        if ($restaurant->status === 'ACTIVE') {
+            event(new \App\Events\RestaurantApprovedEvent($restaurant));
+        } elseif ($restaurant->status === 'BLOCKED') {
+            event(new \App\Events\RestaurantBlockedEvent($restaurant));
+        }
+
         $this->activityLogger->log(
             Auth::id(),
             'UPDATE_RESTAURANT_STATUS',

@@ -385,8 +385,11 @@
             <li class="menu-item {{ Request::routeIs('admin.subscriptions.*') ? 'active' : '' }}">
                 <a href="{{ route('admin.subscriptions.index') }}">Subscriptions</a>
             </li>
-            <li class="menu-item {{ Request::routeIs('admin.notifications.*') ? 'active' : '' }}">
+            <li class="menu-item {{ Request::routeIs('admin.notifications.show') ? 'active' : '' }}">
                 <a href="{{ route('admin.notifications.show') }}">Broadcast Push</a>
+            </li>
+            <li class="menu-item {{ Request::routeIs('admin.notifications.monitor') ? 'active' : '' }}">
+                <a href="{{ route('admin.notifications.monitor') }}">Notification Logs</a>
             </li>
         </ul>
         <div style="padding: 0 15px;">

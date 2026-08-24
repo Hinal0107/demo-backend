@@ -135,6 +135,10 @@ class SubscriptionService
                 'status' => 'ACTIVE'
             ]);
 
+            // Dispatch Events
+            event(new \App\Events\SubscriptionPurchasedEvent($subscription));
+            event(new \App\Events\SubscriptionActivatedEvent($subscription));
+
             return $subscription;
         });
     }
@@ -167,6 +171,10 @@ class SubscriptionService
         $subscription->status = 'CANCELLED';
         $subscription->cancelled_at = now();
         $subscription->save();
+
+        // Dispatch Event
+        event(new \App\Events\SubscriptionCancelledEvent($subscription));
+
         return $subscription;
     }
 

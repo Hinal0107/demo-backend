@@ -130,8 +130,7 @@ class WorldpayService
                     'remarks' => 'Worldpay payment confirmed. Transaction ID: ' . $transactionId,
                 ]);
 
-                // Notify Restaurant
-                $this->notificationService->sendNewOrderNotificationToRestaurant($order);
+                // Handled via OrderConfirmedEvent / OrderCreatedEvent in OrderService transition
             } else {
                 $payment->status = 'FAILED';
                 $payment->failed_at = now();
@@ -149,6 +148,9 @@ class WorldpayService
                     'changed_by_role' => 'SYSTEM',
                     'remarks' => 'Worldpay payment failed. Transaction ID: ' . $transactionId,
                 ]);
+
+                // Dispatch payment failure event
+                event(new \App\Events\OrderPaymentFailedEvent($order));
             }
 
             return [

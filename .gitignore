@@ -28,3 +28,4 @@ Thumbs.db
 
 # Firebase credentials folder
 /storage/app/firebase/
+firebase/*.json

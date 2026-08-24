@@ -9,6 +9,7 @@ use App\Models\Order;
 use App\Models\Payment;
 use App\Models\Subscription;
 use App\Models\AdminActivityLog;
+use App\Models\Notification;
 use App\Services\NotificationService;
 use App\Services\AdminActivityLoggerService;
 use Illuminate\Http\Request;
@@ -166,5 +167,64 @@ class AdminDashboardController extends Controller
         );
 
         return back()->with('success', "Notification broadcasted successfully to {$sentCount} users.");
+    }
+
+    /**
+     * Show notification monitoring dashboard with logs, metrics, and filters.
+     */
+    public function monitorNotifications(Request $request)
+    {
+        $search = $request->query('search');
+        $type = $request->query('type');
+        $status = $request->query('status'); // SENT, FAILED
+        $date = $request->query('date');
+        $restaurantId = $request->query('restaurant_id');
+        $customerId = $request->query('customer_id');
+
+        $query = Notification::with('user');
+
+        if ($type) {
+            $query->where('type', $type);
+        }
+        if ($status) {
+            $query->where('status', $status);
+        }
+        if ($date) {
+            $query->whereDate('created_at', $date);
+        }
+        if ($restaurantId) {
+            $query->where('restaurant_id', $restaurantId);
+        }
+        if ($customerId) {
+            $query->where('user_id', $customerId);
+        }
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('title', 'like', "%{$search}%")
+                  ->orWhere('message', 'like', "%{$search}%")
+                  ->orWhereHas('user', function ($u) use ($search) {
+                      $u->where('name', 'like', "%{$search}%")
+                        ->orWhere('email', 'like', "%{$search}%");
+                  });
+            });
+        }
+
+        $notifications = $query->orderBy('created_at', 'desc')->paginate(20);
+
+        // Metrics calculations
+        $stats = [
+            'total_count' => Notification::count(),
+            'unread_count' => Notification::whereNull('read_at')->count(),
+            'sent_count' => Notification::where('status', 'SENT')->count(),
+            'failed_count' => Notification::where('status', 'FAILED')->count(),
+            'today_count' => Notification::whereDate('created_at', Carbon::today())->count(),
+        ];
+
+        // Fetch options for filter dropdowns
+        $restaurants = Restaurant::active()->get();
+        $customers = User::where('role', 'CUSTOMER')->get();
+        $types = Notification::select('type')->distinct()->pluck('type');
+
+        return view('admin.notifications_monitor', compact('notifications', 'stats', 'restaurants', 'customers', 'types'));
     }
 }

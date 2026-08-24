@@ -188,8 +188,19 @@ class OrderService
             // Log history
             $this->logStatusChange($order->id, 'ORDER', $oldStatus, $newStatus, $changedByUserId, $changerRole, $remarks);
 
-            // Notify user
-            $this->notificationService->sendOrderStatusNotification($order, 'order_' . strtolower($newStatus));
+            // Dispatch Events
+            if ($newStatus === 'PAID') {
+                event(new \App\Events\OrderPaymentSuccessfulEvent($order));
+            } elseif ($newStatus === 'CONFIRMED') {
+                event(new \App\Events\OrderConfirmedEvent($order));
+                event(new \App\Events\OrderCreatedEvent($order)); // Alert Restaurant
+            } elseif ($newStatus === 'PREPARING') {
+                event(new \App\Events\OrderPreparingEvent($order));
+            } elseif ($newStatus === 'READY') {
+                event(new \App\Events\OrderReadyEvent($order));
+            } elseif ($newStatus === 'CANCELLED') {
+                event(new \App\Events\OrderCancelledEvent($order, $remarks ?: ''));
+            }
 
             return $order;
         });
@@ -255,8 +266,12 @@ class OrderService
             // Log history
             $this->logStatusChange($order->id, 'DELIVERY', $oldDeliveryStatus, $newDeliveryStatus, $changedByUserId, $changerRole, $remarks);
 
-            // Notify user
-            $this->notificationService->sendOrderStatusNotification($order, 'delivery_' . strtolower($newDeliveryStatus));
+            // Dispatch Events
+            if ($newDeliveryStatus === 'OUT_FOR_DELIVERY') {
+                event(new \App\Events\OrderOutForDeliveryEvent($order));
+            } elseif ($newDeliveryStatus === 'DELIVERED') {
+                event(new \App\Events\OrderDeliveredEvent($order));
+            }
 
             return $order;
         });

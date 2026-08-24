@@ -29,7 +29,7 @@ class FcmTokenController extends Controller
         $deviceId = $request->input('device_id');
 
         // Prevent duplicate tokens across users or device IDs
-        // Clean up tokens that are registerd to other users but match the token string
+        // Clean up tokens that are registered to other users but match the token string
         FcmToken::where('token', $token)->where('user_id', '!=', $userId)->delete();
 
         $fcm = FcmToken::updateOrCreate(
@@ -46,5 +46,32 @@ class FcmTokenController extends Controller
         );
 
         return $this->successResponse($fcm, 'FCM token registered successfully.');
+    }
+
+    /**
+     * POST /api/v1/devices/register
+     */
+    public function register(Request $request): JsonResponse
+    {
+        return $this->store($request);
+    }
+
+    /**
+     * POST /api/v1/devices/unregister
+     */
+    public function unregister(Request $request): JsonResponse
+    {
+        $request->validate([
+            'fcm_token' => 'required|string',
+        ]);
+
+        $token = $request->input('fcm_token');
+        $userId = $request->user()->id;
+
+        FcmToken::where('token', $token)
+            ->where('user_id', $userId)
+            ->update(['status' => 'INACTIVE']);
+
+        return $this->successResponse(null, 'FCM token unregistered successfully.');
     }
 }

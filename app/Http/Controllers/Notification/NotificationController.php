@@ -31,11 +31,18 @@ class NotificationController extends Controller
     }
 
     /**
+     * POST /api/v1/notifications/read
      * POST /api/v1/notifications/{id}/read
      */
-    public function read(Request $request, int $id): JsonResponse
+    public function read(Request $request, ?int $id = null): JsonResponse
     {
-        $notification = Notification::where('user_id', $request->user()->id)->findOrFail($id);
+        $notificationId = $id ?? $request->input('notification_id');
+
+        if (!$notificationId) {
+            return $this->errorResponse('Notification ID is required.', 422);
+        }
+
+        $notification = Notification::where('user_id', $request->user()->id)->findOrFail($notificationId);
         $notification->read_at = now();
         $notification->save();
 
@@ -55,5 +62,19 @@ class NotificationController extends Controller
             ->update(['read_at' => now()]);
 
         return $this->successResponse(null, 'All notifications marked as read.');
+    }
+
+    /**
+     * GET /api/v1/notifications/unread-count
+     */
+    public function unreadCount(Request $request): JsonResponse
+    {
+        $count = Notification::where('user_id', $request->user()->id)
+            ->whereNull('read_at')
+            ->count();
+
+        return $this->successResponse([
+            'unread_count' => $count,
+        ], 'Unread notification count fetched successfully.');
     }
 }
