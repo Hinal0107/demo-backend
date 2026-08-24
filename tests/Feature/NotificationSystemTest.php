@@ -9,7 +9,7 @@ use App\Models\Address;
 use App\Models\Order;
 use App\Models\Subscription;
 use App\Models\SubscriptionPlan;
-use App\Models\FcmToken;
+use App\Models\UserDevice;
 use App\Models\Notification;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
@@ -68,7 +68,7 @@ class NotificationSystemTest extends TestCase
             'pincode' => 'NW1 1AA',
             'opening_time' => '08:00:00',
             'closing_time' => '22:00:00',
-            'status' => 'ACTIVE',
+            'is_active' => true,
         ]);
 
         $this->restaurantB = Restaurant::create([
@@ -82,7 +82,7 @@ class NotificationSystemTest extends TestCase
             'pincode' => 'NW1 2BB',
             'opening_time' => '08:00:00',
             'closing_time' => '22:00:00',
-            'status' => 'ACTIVE',
+            'is_active' => true,
         ]);
 
         // Link Managers
@@ -90,14 +90,14 @@ class NotificationSystemTest extends TestCase
             'restaurant_id' => $this->restaurantA->id,
             'user_id' => $this->restaurantManagerA->id,
             'role' => 'manager',
-            'status' => 'ACTIVE',
+            'is_active' => true,
         ]);
 
         RestaurantUser::create([
             'restaurant_id' => $this->restaurantB->id,
             'user_id' => $this->restaurantManagerB->id,
             'role' => 'manager',
-            'status' => 'ACTIVE',
+            'is_active' => true,
         ]);
 
         // 3. Create Address
@@ -124,7 +124,7 @@ class NotificationSystemTest extends TestCase
             'meals_per_day' => 1,
             'total_meals' => 30,
             'delivery_frequency' => 'daily',
-            'status' => 'ACTIVE',
+            'is_active' => true,
         ]);
 
         // Fake HTTP for FCM requests globally in setup
@@ -132,6 +132,9 @@ class NotificationSystemTest extends TestCase
             'oauth2.googleapis.com/*' => Http::response(['access_token' => 'mock-access-token'], 200),
             'fcm.googleapis.com/*' => Http::response(['message_id' => 'mock-msg-123'], 200),
         ]);
+
+        \Illuminate\Support\Facades\DB::table('restaurants')->where('id', $this->restaurantA->id)->update(['status' => 'ACTIVE']);
+        \Illuminate\Support\Facades\DB::table('restaurants')->where('id', $this->restaurantB->id)->update(['status' => 'ACTIVE']);
     }
 
     /**
@@ -140,7 +143,7 @@ class NotificationSystemTest extends TestCase
     public function test_device_token_registration_and_unregistration(): void
     {
         // 1. Register Token
-        $response = $this->withHeader('Authorization', 'Bearer mock-uid-customer')
+        $response = $this->actingAs($this->customer, 'sanctum')
             ->postJson('/api/v1/devices/register', [
                 'fcm_token' => 'FCM_TEST_TOKEN_123',
                 'device_type' => 'android',
@@ -148,25 +151,25 @@ class NotificationSystemTest extends TestCase
             ]);
 
         $response->assertStatus(200);
-        $this->assertDatabaseHas('fcm_tokens', [
+        $this->assertDatabaseHas('user_devices', [
             'user_id' => $this->customer->id,
-            'token' => 'FCM_TEST_TOKEN_123',
+            'fcm_token' => 'FCM_TEST_TOKEN_123',
             'device_type' => 'android',
             'device_id' => 'device_id_abc',
-            'status' => 'ACTIVE',
+            'is_active' => true,
         ]);
 
         // 2. Unregister Token
-        $responseUnreg = $this->withHeader('Authorization', 'Bearer mock-uid-customer')
+        $responseUnreg = $this->actingAs($this->customer, 'sanctum')
             ->postJson('/api/v1/devices/unregister', [
                 'fcm_token' => 'FCM_TEST_TOKEN_123',
             ]);
 
         $responseUnreg->assertStatus(200);
-        $this->assertDatabaseHas('fcm_tokens', [
+        $this->assertDatabaseHas('user_devices', [
             'user_id' => $this->customer->id,
-            'token' => 'FCM_TEST_TOKEN_123',
-            'status' => 'INACTIVE',
+            'fcm_token' => 'FCM_TEST_TOKEN_123',
+            'is_active' => false,
         ]);
     }
 
@@ -193,21 +196,21 @@ class NotificationSystemTest extends TestCase
         ]);
 
         // Get notifications
-        $response = $this->withHeader('Authorization', 'Bearer mock-uid-customer')
+        $response = $this->actingAs($this->customer, 'sanctum')
             ->getJson('/api/v1/notifications');
 
         $response->assertStatus(200);
         $response->assertJsonCount(2, 'data');
 
         // Check unread count
-        $responseCount = $this->withHeader('Authorization', 'Bearer mock-uid-customer')
+        $responseCount = $this->actingAs($this->customer, 'sanctum')
             ->getJson('/api/v1/notifications/unread-count');
 
         $responseCount->assertStatus(200);
         $responseCount->assertJsonFragment(['unread_count' => 2]);
 
         // Mark single notification as read
-        $responseRead = $this->withHeader('Authorization', 'Bearer mock-uid-customer')
+        $responseRead = $this->actingAs($this->customer, 'sanctum')
             ->postJson('/api/v1/notifications/read', [
                 'notification_id' => $n1->id,
             ]);
@@ -216,19 +219,19 @@ class NotificationSystemTest extends TestCase
         $this->assertNotNull($n1->fresh()->read_at);
 
         // Check count again
-        $responseCount2 = $this->withHeader('Authorization', 'Bearer mock-uid-customer')
+        $responseCount2 = $this->actingAs($this->customer, 'sanctum')
             ->getJson('/api/v1/notifications/unread-count');
 
         $responseCount2->assertJsonFragment(['unread_count' => 1]);
 
         // Mark all as read
-        $responseReadAll = $this->withHeader('Authorization', 'Bearer mock-uid-customer')
+        $responseReadAll = $this->actingAs($this->customer, 'sanctum')
             ->postJson('/api/v1/notifications/read-all');
 
         $responseReadAll->assertStatus(200);
         $this->assertNotNull($n2->fresh()->read_at);
 
-        $responseCount3 = $this->withHeader('Authorization', 'Bearer mock-uid-customer')
+        $responseCount3 = $this->actingAs($this->customer, 'sanctum')
             ->getJson('/api/v1/notifications/unread-count');
         $responseCount3->assertJsonFragment(['unread_count' => 0]);
     }
@@ -271,11 +274,11 @@ class NotificationSystemTest extends TestCase
     public function test_notification_idempotency_prevention(): void
     {
         // Register token
-        FcmToken::create([
+        UserDevice::create([
             'user_id' => $this->customer->id,
-            'token' => 'FCM_CUSTOMER_TOKEN',
+            'fcm_token' => 'FCM_CUSTOMER_TOKEN',
             'device_type' => 'android',
-            'status' => 'ACTIVE',
+            'is_active' => true,
         ]);
 
         $order = Order::create([
@@ -312,18 +315,18 @@ class NotificationSystemTest extends TestCase
     public function test_multi_restaurant_routing_isolation(): void
     {
         // Register Managers' FCM Tokens
-        FcmToken::create([
+        UserDevice::create([
             'user_id' => $this->restaurantManagerA->id,
-            'token' => 'FCM_MANAGER_A_TOKEN',
+            'fcm_token' => 'FCM_MANAGER_A_TOKEN',
             'device_type' => 'android',
-            'status' => 'ACTIVE',
+            'is_active' => true,
         ]);
 
-        FcmToken::create([
+        UserDevice::create([
             'user_id' => $this->restaurantManagerB->id,
-            'token' => 'FCM_MANAGER_B_TOKEN',
+            'fcm_token' => 'FCM_MANAGER_B_TOKEN',
             'device_type' => 'android',
-            'status' => 'ACTIVE',
+            'is_active' => true,
         ]);
 
         $order = Order::create([
@@ -365,18 +368,18 @@ class NotificationSystemTest extends TestCase
     public function test_multi_device_delivery(): void
     {
         // User has two active devices
-        $token1 = FcmToken::create([
+        $token1 = UserDevice::create([
             'user_id' => $this->customer->id,
-            'token' => 'DEVICE_PHONE_TOKEN',
+            'fcm_token' => 'DEVICE_PHONE_TOKEN',
             'device_type' => 'ios',
-            'status' => 'ACTIVE',
+            'is_active' => true,
         ]);
 
-        $token2 = FcmToken::create([
+        $token2 = UserDevice::create([
             'user_id' => $this->customer->id,
-            'token' => 'DEVICE_TABLET_TOKEN',
+            'fcm_token' => 'DEVICE_TABLET_TOKEN',
             'device_type' => 'android',
-            'status' => 'ACTIVE',
+            'is_active' => true,
         ]);
 
         // Fire event
@@ -404,12 +407,12 @@ class NotificationSystemTest extends TestCase
         ]);
 
         // Unregister token1 (Phone)
-        $this->withHeader('Authorization', 'Bearer mock-uid-customer')
+        $this->actingAs($this->customer, 'sanctum')
             ->postJson('/api/v1/devices/unregister', [
                 'fcm_token' => 'DEVICE_PHONE_TOKEN',
             ]);
 
-        $this->assertEquals('INACTIVE', $token1->fresh()->status);
-        $this->assertEquals('ACTIVE', $token2->fresh()->status);
+        $this->assertFalse($token1->fresh()->is_active);
+        $this->assertTrue($token2->fresh()->is_active);
     }
 }

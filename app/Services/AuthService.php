@@ -5,7 +5,7 @@ namespace App\Services;
 use App\Models\User;
 use App\Models\Restaurant;
 use App\Models\RestaurantUser;
-use App\Models\FcmToken;
+use App\Models\UserDevice;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -86,10 +86,9 @@ class AuthService
      */
     public function login(array $data): array
     {
-        $user = User::where('firebase_uid', $data['firebase_uid'])->first();
-
-        if (!$user) {
-            throw new Exception('Account not found in our database. Please register first.', 404);
+        $user = User::where('email', $data['email'])->first();
+        if (!$user || !Hash::check($data['password'], $user->password)) {
+            throw new Exception('Invalid credentials provided.', 401);
         }
 
         if ($user->status === 'BLOCKED') {
@@ -100,21 +99,24 @@ class AuthService
         $tokenName = 'AuthToken_' . $user->id;
         $token = $user->createToken($tokenName)->plainTextToken;
 
-        // Associate FCM Token if provided
+        // Clean up any existing records with the same FCM token to avoid unique constraint violations
         if (!empty($data['fcm_token'])) {
-            FcmToken::updateOrCreate(
-                [
-                    'user_id' => $user->id,
-                    'device_id' => $data['device_id'] ?? null,
-                ],
-                [
-                    'token' => $data['fcm_token'],
-                    'device_type' => $data['device_type'] ?? 'unknown',
-                    'status' => 'ACTIVE',
-                    'last_used_at' => now(),
-                ]
-            );
+            UserDevice::where('fcm_token', $data['fcm_token'])->delete();
         }
+
+        // Associate FCM Token
+        UserDevice::updateOrCreate(
+            [
+                'user_id' => $user->id,
+                'device_id' => $data['device_id'],
+            ],
+            [
+                'fcm_token' => $data['fcm_token'],
+                'device_type' => $data['device_type'],
+                'is_active' => true,
+                'last_login_at' => now(),
+            ]
+        );
 
         // Resolve linked restaurant details
         $restaurant = null;
@@ -140,13 +142,15 @@ class AuthService
     public function logout(User $user, ?string $fcmToken = null): void
     {
         // 1. Invalidate current personal access token
-        $user->currentAccessToken()->delete();
+        if ($user->currentAccessToken()) {
+            $user->currentAccessToken()->delete();
+        }
 
-        // 2. Mark target FCM token as INACTIVE / delete
+        // 2. Deactivate target device
         if ($fcmToken) {
-            FcmToken::where('user_id', $user->id)
-                ->where('token', $fcmToken)
-                ->delete();
+            UserDevice::where('user_id', $user->id)
+                ->where('fcm_token', $fcmToken)
+                ->update(['is_active' => false]);
         }
     }
 

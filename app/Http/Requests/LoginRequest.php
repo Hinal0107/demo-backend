@@ -14,10 +14,11 @@ class LoginRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'firebase_uid' => 'required|string',
-            'device_type' => 'required|string|in:android,ios,web,unknown',
-            'fcm_token' => 'nullable|string',
-            'device_id' => 'nullable|string',
+            'email' => 'required|email',
+            'password' => 'required|string',
+            'device_type' => 'required|string|in:android,ios',
+            'device_id' => 'required|string',
+            'fcm_token' => 'required|string',
         ];
     }
 }

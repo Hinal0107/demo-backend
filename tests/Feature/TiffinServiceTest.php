@@ -65,7 +65,7 @@ class TiffinServiceTest extends TestCase
             'pincode' => 'NW1 1AA',
             'opening_time' => '08:00:00',
             'closing_time' => '22:00:00',
-            'status' => 'ACTIVE',
+            'is_active' => true,
         ]);
 
         $this->restaurantB = Restaurant::create([
@@ -79,7 +79,7 @@ class TiffinServiceTest extends TestCase
             'pincode' => 'NW1 2BB',
             'opening_time' => '08:00:00',
             'closing_time' => '22:00:00',
-            'status' => 'ACTIVE',
+            'is_active' => true,
         ]);
 
         // Link Managers
@@ -87,14 +87,14 @@ class TiffinServiceTest extends TestCase
             'restaurant_id' => $this->restaurantA->id,
             'user_id' => $this->restaurantManagerA->id,
             'role' => 'manager',
-            'status' => 'ACTIVE',
+            'is_active' => true,
         ]);
 
         RestaurantUser::create([
             'restaurant_id' => $this->restaurantB->id,
             'user_id' => $this->restaurantManagerB->id,
             'role' => 'manager',
-            'status' => 'ACTIVE',
+            'is_active' => true,
         ]);
 
         // 3. Create Address
@@ -109,6 +109,9 @@ class TiffinServiceTest extends TestCase
             'pincode' => 'NW1 1AA',
             'is_default' => true,
         ]);
+
+        \Illuminate\Support\Facades\DB::table('restaurants')->where('id', $this->restaurantA->id)->update(['status' => 'ACTIVE']);
+        \Illuminate\Support\Facades\DB::table('restaurants')->where('id', $this->restaurantB->id)->update(['status' => 'ACTIVE']);
     }
 
     /**
@@ -120,7 +123,7 @@ class TiffinServiceTest extends TestCase
         $catA = MenuCategory::create([
             'restaurant_id' => $this->restaurantA->id,
             'name' => 'Lunch A',
-            'status' => 'ACTIVE',
+            'is_active' => true,
         ]);
 
         $itemA = MenuItem::create([
@@ -129,13 +132,13 @@ class TiffinServiceTest extends TestCase
             'name' => 'Tiffin A',
             'price' => 10.00,
             'veg_type' => 'VEG',
-            'status' => 'ACTIVE',
+            'is_active' => true,
         ]);
 
         $catB = MenuCategory::create([
             'restaurant_id' => $this->restaurantB->id,
             'name' => 'Lunch B',
-            'status' => 'ACTIVE',
+            'is_active' => true,
         ]);
 
         $itemB = MenuItem::create([
@@ -144,11 +147,11 @@ class TiffinServiceTest extends TestCase
             'name' => 'Tiffin B',
             'price' => 12.00,
             'veg_type' => 'VEG',
-            'status' => 'ACTIVE',
+            'is_active' => true,
         ]);
 
         // 2. Add Item A (Restaurant A) to Cart
-        $response = $this->withHeader('Authorization', 'Bearer mock-uid-customer')
+        $response = $this->actingAs($this->customer, 'sanctum')
             ->postJson('/api/v1/cart/items', [
                 'restaurant_id' => $this->restaurantA->id,
                 'menu_item_id' => $itemA->id,
@@ -162,7 +165,7 @@ class TiffinServiceTest extends TestCase
         ]);
 
         // 3. Try to add Item B (Restaurant B) to Cart (should fail)
-        $responseFail = $this->withHeader('Authorization', 'Bearer mock-uid-customer')
+        $responseFail = $this->actingAs($this->customer, 'sanctum')
             ->postJson('/api/v1/cart/items', [
                 'restaurant_id' => $this->restaurantB->id,
                 'menu_item_id' => $itemB->id,
@@ -183,7 +186,7 @@ class TiffinServiceTest extends TestCase
         $catA = MenuCategory::create([
             'restaurant_id' => $this->restaurantA->id,
             'name' => 'Lunch',
-            'status' => 'ACTIVE',
+            'is_active' => true,
         ]);
 
         $itemA = MenuItem::create([
@@ -192,11 +195,11 @@ class TiffinServiceTest extends TestCase
             'name' => 'Paneer Thali Box',
             'price' => 10.00,
             'veg_type' => 'VEG',
-            'status' => 'ACTIVE',
+            'is_active' => true,
         ]);
 
         // Place Order
-        $response = $this->withHeader('Authorization', 'Bearer mock-uid-customer')
+        $response = $this->actingAs($this->customer, 'sanctum')
             ->postJson('/api/v1/orders', [
                 'restaurant_id' => $this->restaurantA->id,
                 'address_id' => $this->address->id,
@@ -253,7 +256,7 @@ class TiffinServiceTest extends TestCase
         ]);
 
         // 2. Try to view order as Restaurant Manager B (should be rejected)
-        $responseB = $this->withHeader('Authorization', 'Bearer mock-uid-restaurant-b')
+        $responseB = $this->actingAs($this->restaurantManagerB, 'sanctum')
             ->getJson("/api/v1/restaurant/orders/{$order->id}");
 
         $responseB->assertStatus(403);
@@ -263,7 +266,7 @@ class TiffinServiceTest extends TestCase
         ]);
 
         // 3. View order as Restaurant Manager A (should be allowed)
-        $responseA = $this->withHeader('Authorization', 'Bearer mock-uid-restaurant')
+        $responseA = $this->actingAs($this->restaurantManagerA, 'sanctum')
             ->getJson("/api/v1/restaurant/orders/{$order->id}");
 
         $responseA->assertStatus(200);
@@ -291,7 +294,7 @@ class TiffinServiceTest extends TestCase
         ]);
 
         // Try to confirm a PENDING_PAYMENT order directly (should fail because it's unpaid)
-        $response = $this->withHeader('Authorization', 'Bearer mock-uid-restaurant')
+        $response = $this->actingAs($this->restaurantManagerA, 'sanctum')
             ->postJson("/api/v1/restaurant/orders/{$order->id}/confirm");
 
         $response->assertStatus(422);
@@ -306,7 +309,7 @@ class TiffinServiceTest extends TestCase
         $catA = MenuCategory::create([
             'restaurant_id' => $this->restaurantA->id,
             'name' => 'Lunch',
-            'status' => 'ACTIVE',
+            'is_active' => true,
         ]);
 
         $itemA = MenuItem::create([
@@ -315,7 +318,7 @@ class TiffinServiceTest extends TestCase
             'name' => 'Tiffin Special',
             'price' => 100.00,
             'veg_type' => 'VEG',
-            'status' => 'ACTIVE',
+            'is_active' => true,
         ]);
 
         // 2. Set up taxes (GST 5% and VAT 12.5% = 17.5% total)
@@ -323,18 +326,18 @@ class TiffinServiceTest extends TestCase
             'restaurant_id' => $this->restaurantA->id,
             'name' => 'GST',
             'rate' => 5.00,
-            'status' => 'ACTIVE',
+            'is_active' => true,
         ]);
 
         \App\Models\Tax::create([
             'restaurant_id' => $this->restaurantA->id,
             'name' => 'VAT',
             'rate' => 12.50,
-            'status' => 'ACTIVE',
+            'is_active' => true,
         ]);
 
         // Place order
-        $response = $this->withHeader('Authorization', 'Bearer mock-uid-customer')
+        $response = $this->actingAs($this->customer, 'sanctum')
             ->postJson('/api/v1/orders', [
                 'restaurant_id' => $this->restaurantA->id,
                 'address_id' => $this->address->id,
@@ -369,11 +372,11 @@ class TiffinServiceTest extends TestCase
             'name' => 'Extra Butter Roti',
             'price' => 1.50,
             'availability' => true,
-            'status' => 'ACTIVE',
+            'is_active' => true,
         ]);
 
         // 2. Place Order with addon
-        $response = $this->withHeader('Authorization', 'Bearer mock-uid-customer')
+        $response = $this->actingAs($this->customer, 'sanctum')
             ->postJson('/api/v1/orders', [
                 'restaurant_id' => $this->restaurantA->id,
                 'address_id' => $this->address->id,
@@ -416,16 +419,92 @@ class TiffinServiceTest extends TestCase
             'name' => 'Today Special Thali',
             'price' => 10.00,
             'veg_type' => 'VEG',
-            'status' => 'ACTIVE',
+            'is_active' => true,
         ]);
 
         // Query today's meal
-        $response = $this->withHeader('Authorization', 'Bearer mock-uid-customer')
+        $response = $this->actingAs($this->customer, 'sanctum')
             ->getJson("/api/v1/restaurants/{$this->restaurantA->id}/today-meal");
 
         $response->assertStatus(200);
         $response->assertJsonFragment([
             'name' => 'Today Special Thali',
+        ]);
+    }
+
+    /**
+     * Test email/password registration, login, token update, and logout authentication sync.
+     */
+    public function test_email_password_auth_fcm_sync_flow(): void
+    {
+        // 1. Register a new customer via email/password
+        $registerData = [
+            'name' => 'John Doe Auth Test',
+            'email' => 'johndoe_authtest@example.com',
+            'phone' => '+447999888777',
+            'password' => 'secret123',
+            'password_confirmation' => 'secret123',
+            'role' => 'customer',
+        ];
+
+        $registerResponse = $this->postJson('/api/v1/auth/register', $registerData);
+        $registerResponse->assertStatus(201);
+        $this->assertDatabaseHas('users', [
+            'email' => 'johndoe_authtest@example.com',
+            'role' => 'CUSTOMER',
+        ]);
+
+        // 2. Login via email/password
+        $loginData = [
+            'email' => 'johndoe_authtest@example.com',
+            'password' => 'secret123',
+            'device_type' => 'android',
+            'fcm_token' => 'fcm-token-initial',
+            'device_id' => 'device-android-123',
+        ];
+
+        $loginResponse = $this->postJson('/api/v1/auth/login', $loginData);
+        $loginResponse->assertStatus(200);
+        
+        $token = $loginResponse->json('data.token');
+        $this->assertNotEmpty($token);
+
+        // Verify FCM token is registered in database
+        $this->assertDatabaseHas('user_devices', [
+            'fcm_token' => 'fcm-token-initial',
+            'device_id' => 'device-android-123',
+            'device_type' => 'android',
+            'is_active' => true,
+        ]);
+
+        // 3. Update/Refresh FCM Token via dedicated sync API
+        $syncResponse = $this->withHeader('Authorization', 'Bearer ' . $token)
+            ->postJson('/api/v1/device/fcm-token', [
+                'device_type' => 'android',
+                'device_id' => 'device-android-123',
+                'fcm_token' => 'fcm-token-refreshed',
+            ]);
+
+        $syncResponse->assertStatus(200);
+        
+        $this->assertDatabaseHas('user_devices', [
+            'fcm_token' => 'fcm-token-refreshed',
+            'device_id' => 'device-android-123',
+            'is_active' => true,
+        ]);
+
+        // 4. Logout and verify token is invalidated/deleted
+        $logoutResponse = $this->withHeader('Authorization', 'Bearer ' . $token)
+            ->postJson('/api/v1/auth/logout', [
+                'fcm_token' => 'fcm-token-refreshed',
+            ]);
+
+        $logoutResponse->assertStatus(200);
+
+        // Verify FCM token is deactivated (set to is_active = false)
+        $this->assertDatabaseHas('user_devices', [
+            'fcm_token' => 'fcm-token-refreshed',
+            'is_active' => false,
         ]);
     }
 }

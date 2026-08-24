@@ -22,6 +22,7 @@ use App\Http\Controllers\Notification\NotificationController;
 
 Route::prefix('v1')->group(function () {
     
+    
     // 1. Guest Authentication Routes
     Route::post('/auth/register', [AuthController::class, 'register']);
     Route::post('/auth/login', [AuthController::class, 'login']);
@@ -31,7 +32,7 @@ Route::prefix('v1')->group(function () {
     Route::post('/payments/worldpay/simulate', [WorldpayController::class, 'simulate']);
 
     // 3. Protected Routes (validated via Firebase Token or Sanctum)
-    Route::middleware('auth.firebase')->group(function () {
+    Route::middleware('auth:sanctum')->group(function () {
         
         // Auth management
         Route::post('/auth/logout', [AuthController::class, 'logout']);
@@ -122,6 +123,7 @@ Route::prefix('v1')->group(function () {
         Route::post('/notifications/token', [FcmTokenController::class, 'store']);
         Route::post('/devices/register', [FcmTokenController::class, 'register']);
         Route::post('/devices/unregister', [FcmTokenController::class, 'unregister']);
+        Route::post('/device/fcm-token', [FcmTokenController::class, 'store']);
         Route::get('/notifications', [NotificationController::class, 'index']);
         Route::get('/notifications/unread-count', [NotificationController::class, 'unreadCount']);
         Route::post('/notifications/read', [NotificationController::class, 'read']);

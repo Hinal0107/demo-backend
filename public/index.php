@@ -17,4 +17,10 @@ require __DIR__.'/../vendor/autoload.php';
 /** @var Application $app */
 $app = require_once __DIR__.'/../bootstrap/app.php';
 
+
+// Workaround for Apache mod_fastcgi stripping the Authorization header
+if (isset($_SERVER['HTTP_X_AUTHORIZATION'])) {
+    $_SERVER['HTTP_AUTHORIZATION'] = $_SERVER['HTTP_X_AUTHORIZATION'];
+}
+
 $app->handleRequest(Request::capture());

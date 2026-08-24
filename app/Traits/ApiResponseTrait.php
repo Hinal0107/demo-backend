@@ -32,6 +32,9 @@ trait ApiResponseTrait
      */
     protected function errorResponse(string $message = 'An error occurred', int $code = 400, array $errors = []): JsonResponse
     {
+        if ($code < 100 || $code >= 600) {
+            $code = 400;
+        }
         $response = [
             'success' => false,
             'message' => $message,

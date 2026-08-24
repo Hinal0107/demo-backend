@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\FCM;
 
 use App\Http\Controllers\Controller;
-use App\Models\FcmToken;
+use App\Models\UserDevice;
 use App\Traits\ApiResponseTrait;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
@@ -28,20 +28,19 @@ class FcmTokenController extends Controller
         $deviceType = $request->input('device_type');
         $deviceId = $request->input('device_id');
 
-        // Prevent duplicate tokens across users or device IDs
-        // Clean up tokens that are registered to other users but match the token string
-        FcmToken::where('token', $token)->where('user_id', '!=', $userId)->delete();
+        // Clean up any existing records with the same FCM token to avoid unique constraint violations
+        UserDevice::where('fcm_token', $token)->delete();
 
-        $fcm = FcmToken::updateOrCreate(
+        $fcm = UserDevice::updateOrCreate(
             [
                 'user_id' => $userId,
                 'device_id' => $deviceId,
             ],
             [
-                'token' => $token,
+                'fcm_token' => $token,
                 'device_type' => $deviceType,
-                'status' => 'ACTIVE',
-                'last_used_at' => now(),
+                'is_active' => true,
+                'last_login_at' => now(),
             ]
         );
 
@@ -68,9 +67,9 @@ class FcmTokenController extends Controller
         $token = $request->input('fcm_token');
         $userId = $request->user()->id;
 
-        FcmToken::where('token', $token)
+        UserDevice::where('fcm_token', $token)
             ->where('user_id', $userId)
-            ->update(['status' => 'INACTIVE']);
+            ->update(['is_active' => false]);
 
         return $this->successResponse(null, 'FCM token unregistered successfully.');
     }

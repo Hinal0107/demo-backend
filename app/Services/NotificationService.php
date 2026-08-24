@@ -6,7 +6,7 @@ use App\Models\User;
 use App\Models\Order;
 use App\Models\Subscription;
 use App\Models\Notification;
-use App\Models\FcmToken;
+use App\Models\UserDevice;
 use App\Models\Restaurant;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Http;
@@ -49,9 +49,9 @@ class NotificationService
         ]);
 
         // 4. Dispatch FCM Push Notifications
-        $tokens = FcmToken::where('user_id', $user->id)
-            ->where('status', 'ACTIVE')
-            ->pluck('token')
+        $tokens = UserDevice::where('user_id', $user->id)
+            ->where('is_active', true)
+            ->pluck('fcm_token')
             ->toArray();
 
         if (!empty($tokens)) {
@@ -559,7 +559,7 @@ class NotificationService
                         str_contains($responseBody, 'UNREGISTERED') || 
                         str_contains($responseBody, 'NOT_FOUND') ||
                         str_contains($responseBody, 'Requested entity was not found')) {
-                        FcmToken::where('token', $token)->update(['status' => 'INACTIVE']);
+                        UserDevice::where('fcm_token', $token)->update(['is_active' => false]);
                         Log::warning("FCM token marked INACTIVE due to invalid target response: {$token}");
                     }
                 }

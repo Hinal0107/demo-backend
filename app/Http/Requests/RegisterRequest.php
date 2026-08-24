@@ -17,7 +17,9 @@ class RegisterRequest extends FormRequest
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users,email',
             'phone' => 'required|string|max:20|unique:users,phone',
-            'firebase_uid' => 'required|string|unique:users,firebase_uid',
+            'firebase_uid' => 'required_without:password|nullable|string|unique:users,firebase_uid',
+            'password' => 'required_without:firebase_uid|nullable|string|min:6|confirmed',
+            'password_confirmation' => 'required_with:password|nullable|string',
             'role' => 'required|string|in:customer,restaurant',
             // Optional Restaurant Details during registration
             'restaurant_name' => 'required_if:role,restaurant|string|max:255',

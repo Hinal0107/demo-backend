@@ -3,6 +3,7 @@
         Options -MultiViews -Indexes
     </IfModule>
 
+    SetEnvIfNoCase ^Authorization$ "(.+)" HTTP_AUTHORIZATION=$1
     RewriteEngine On
 
     # Handle Authorization Header

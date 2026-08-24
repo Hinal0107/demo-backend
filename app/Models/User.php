@@ -83,8 +83,8 @@ class User extends Authenticatable
         return $this->hasMany(Subscription::class, 'customer_id');
     }
 
-    public function fcmTokens()
+    public function userDevices()
     {
-        return $this->hasMany(FcmToken::class, 'user_id');
+        return $this->hasMany(UserDevice::class, 'user_id');
     }
 }

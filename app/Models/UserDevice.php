@@ -4,19 +4,22 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class FcmToken extends Model
+class UserDevice extends Model
 {
+    protected $table = 'user_devices';
+
     protected $fillable = [
         'user_id',
-        'token',
-        'device_type',
         'device_id',
-        'status',
-        'last_used_at',
+        'device_type',
+        'fcm_token',
+        'is_active',
+        'last_login_at',
     ];
 
     protected $casts = [
-        'last_used_at' => 'datetime',
+        'is_active' => 'boolean',
+        'last_login_at' => 'datetime',
     ];
 
     public function user()
