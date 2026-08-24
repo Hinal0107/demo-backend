@@ -48,36 +48,69 @@ class OrderService
             $itemsToCreate = [];
 
             foreach ($data['items'] as $itemData) {
-                $menuItem = MenuItem::active()->findOrFail($itemData['menu_item_id']);
+                if (isset($itemData['addon_id'])) {
+                    $addon = \App\Models\Addon::active()->findOrFail($itemData['addon_id']);
 
-                if ((int)$menuItem->restaurant_id !== (int)$restaurantId) {
-                    throw new Exception("Menu item '{$menuItem->name}' does not belong to the selected restaurant.", 422);
+                    if ((int)$addon->restaurant_id !== (int)$restaurantId) {
+                        throw new Exception("Add-on '{$addon->name}' does not belong to the selected restaurant.", 422);
+                    }
+
+                    $qty = $itemData['quantity'];
+                    if ($qty <= 0) {
+                        throw new Exception('Quantity must be greater than 0.', 422);
+                    }
+
+                    $price = $addon->price;
+                    $totalPrice = $price * $qty;
+                    $subtotal += $totalPrice;
+
+                    $itemsToCreate[] = [
+                        'menu_item_id' => null,
+                        'addon_id' => $addon->id,
+                        'item_name' => $addon->name,
+                        'quantity' => $qty,
+                        'unit_price' => $price,
+                        'total_price' => $totalPrice,
+                    ];
+                } else {
+                    $menuItem = MenuItem::active()->findOrFail($itemData['menu_item_id']);
+
+                    if ((int)$menuItem->restaurant_id !== (int)$restaurantId) {
+                        throw new Exception("Menu item '{$menuItem->name}' does not belong to the selected restaurant.", 422);
+                    }
+
+                    $qty = $itemData['quantity'];
+                    if ($qty <= 0) {
+                        throw new Exception('Quantity must be greater than 0.', 422);
+                    }
+
+                    $price = $menuItem->active_price;
+                    $totalPrice = $price * $qty;
+                    $subtotal += $totalPrice;
+
+                    $itemsToCreate[] = [
+                        'menu_item_id' => $menuItem->id,
+                        'addon_id' => null,
+                        'item_name' => $menuItem->name,
+                        'quantity' => $qty,
+                        'unit_price' => $price,
+                        'total_price' => $totalPrice,
+                    ];
                 }
-
-                $qty = $itemData['quantity'];
-                if ($qty <= 0) {
-                    throw new Exception('Quantity must be greater than 0.', 422);
-                }
-
-                $price = $menuItem->active_price;
-                $totalPrice = $price * $qty;
-                $subtotal += $totalPrice;
-
-                $itemsToCreate[] = [
-                    'menu_item_id' => $menuItem->id,
-                    'item_name' => $menuItem->name,
-                    'quantity' => $qty,
-                    'unit_price' => $price,
-                    'total_price' => $totalPrice,
-                ];
             }
 
             if (empty($itemsToCreate)) {
                 throw new Exception('Order must contain at least one item.', 422);
             }
 
-            // Simple Tax/Fees calculation
-            $tax = round($subtotal * 0.10, 2); // 10% flat tax
+            // Dynamic Tax calculation
+            $hasTaxes = \App\Models\Tax::where('restaurant_id', $restaurantId)->exists();
+            if ($hasTaxes) {
+                $taxRateSum = \App\Models\Tax::where('restaurant_id', $restaurantId)->where('status', 'ACTIVE')->sum('rate');
+            } else {
+                $taxRateSum = 10.00; // 10% flat tax fallback
+            }
+            $tax = round($subtotal * ($taxRateSum / 100), 2);
             $deliveryFee = 3.50; // flat delivery fee
             $discount = 0.00; // placeholder for promo codes
             $totalAmount = $subtotal + $tax + $deliveryFee - $discount;

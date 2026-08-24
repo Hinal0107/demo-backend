@@ -18,7 +18,7 @@ class CartController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        $cartItems = CartItem::with('menuItem')
+        $cartItems = CartItem::with(['menuItem', 'addon'])
             ->where('customer_id', $request->user()->id)
             ->get();
 
@@ -29,12 +29,15 @@ class CartController extends Controller
 
         return $this->successResponse([
             'items' => $cartItems->map(function ($item) {
+                $name = $item->menu_item_id ? $item->menuItem?->name : $item->addon?->name;
+                $image = $item->menu_item_id ? $item->menuItem?->image : $item->addon?->image;
                 return [
                     'id' => $item->id,
                     'restaurant_id' => $item->restaurant_id,
                     'menu_item_id' => $item->menu_item_id,
-                    'name' => $item->menuItem?->name,
-                    'image' => $item->menuItem?->image,
+                    'addon_id' => $item->addon_id,
+                    'name' => $name,
+                    'image' => $image,
                     'quantity' => $item->quantity,
                     'unit_price' => (float)$item->unit_price,
                     'total_price' => (float)$item->total_price,
@@ -52,19 +55,34 @@ class CartController extends Controller
     {
         $request->validate([
             'restaurant_id' => 'required|integer|exists:restaurants,id',
-            'menu_item_id' => 'required|integer|exists:menu_items,id',
+            'menu_item_id' => 'nullable|integer|exists:menu_items,id',
+            'addon_id' => 'nullable|integer|exists:addons,id',
             'quantity' => 'required|integer|min:1',
         ]);
 
         $customerId = $request->user()->id;
         $restaurantId = $request->input('restaurant_id');
         $menuItemId = $request->input('menu_item_id');
+        $addonId = $request->input('addon_id');
         $qty = $request->input('quantity');
 
-        // Verify menu item belongs to restaurant
-        $menuItem = MenuItem::active()->findOrFail($menuItemId);
-        if ((int)$menuItem->restaurant_id !== (int)$restaurantId) {
-            return $this->errorResponse('Selected item does not belong to this restaurant.', 422);
+        if (!$menuItemId && !$addonId) {
+            return $this->errorResponse('Either menu_item_id or addon_id is required.', 422);
+        }
+
+        // Verify item belongs to restaurant and fetch price
+        if ($addonId) {
+            $addon = \App\Models\Addon::active()->findOrFail($addonId);
+            if ((int)$addon->restaurant_id !== (int)$restaurantId) {
+                return $this->errorResponse('Selected add-on does not belong to this restaurant.', 422);
+            }
+            $price = $addon->price;
+        } else {
+            $menuItem = MenuItem::active()->findOrFail($menuItemId);
+            if ((int)$menuItem->restaurant_id !== (int)$restaurantId) {
+                return $this->errorResponse('Selected item does not belong to this restaurant.', 422);
+            }
+            $price = $menuItem->active_price;
         }
 
         // Check if cart contains items from a different restaurant
@@ -81,11 +99,15 @@ class CartController extends Controller
         }
 
         // Add or update quantity
-        $cartItem = CartItem::where('customer_id', $customerId)
-            ->where('menu_item_id', $menuItemId)
-            ->first();
-
-        $price = $menuItem->active_price;
+        if ($addonId) {
+            $cartItem = CartItem::where('customer_id', $customerId)
+                ->where('addon_id', $addonId)
+                ->first();
+        } else {
+            $cartItem = CartItem::where('customer_id', $customerId)
+                ->where('menu_item_id', $menuItemId)
+                ->first();
+        }
 
         if ($cartItem) {
             $cartItem->quantity += $qty;
@@ -96,6 +118,7 @@ class CartController extends Controller
                 'customer_id' => $customerId,
                 'restaurant_id' => $restaurantId,
                 'menu_item_id' => $menuItemId,
+                'addon_id' => $addonId,
                 'quantity' => $qty,
                 'unit_price' => $price,
                 'total_price' => $qty * $price,
@@ -120,8 +143,13 @@ class CartController extends Controller
 
         $cartItem = CartItem::where('customer_id', $request->user()->id)->findOrFail($id);
         
-        $menuItem = MenuItem::findOrFail($cartItem->menu_item_id);
-        $price = $menuItem->active_price;
+        if ($cartItem->addon_id) {
+            $addon = \App\Models\Addon::findOrFail($cartItem->addon_id);
+            $price = $addon->price;
+        } else {
+            $menuItem = MenuItem::findOrFail($cartItem->menu_item_id);
+            $price = $menuItem->active_price;
+        }
 
         $cartItem->quantity = $request->input('quantity');
         $cartItem->total_price = $cartItem->quantity * $price;

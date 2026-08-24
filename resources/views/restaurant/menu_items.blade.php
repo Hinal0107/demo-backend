@@ -24,6 +24,7 @@
             <table>
                 <thead>
                     <tr>
+                        <th>Image</th>
                         <th>Sort</th>
                         <th>Name</th>
                         <th>Category</th>
@@ -37,6 +38,13 @@
                 <tbody>
                     @forelse($menuItems as $item)
                         <tr>
+                            <td>
+                                @if($item->image)
+                                    <img src="{{ $item->image }}" alt="Dish Image" style="width: 50px; height: 50px; object-fit: cover; border-radius: 6px;">
+                                @else
+                                    <div style="width: 50px; height: 50px; border-radius: 6px; background-color: rgba(0,0,0,0.05); display: flex; align-items: center; justify-content: center; font-size: 10px; color: var(--text-secondary);">No Image</div>
+                                @endif
+                            </td>
                             <td style="font-weight: 600;">{{ $item->sort_order }}</td>
                             <td>
                                 <div style="font-weight: 600;">{{ $item->name }}</div>
@@ -82,7 +90,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="8" style="text-align: center; color: var(--text-secondary); padding: 30px;">
+                            <td colspan="9" style="text-align: center; color: var(--text-secondary); padding: 30px;">
                                 No menu items found. Create one on the right.
                             </td>
                         </tr>
@@ -96,7 +104,7 @@
     <div class="table-container" style="padding: 25px;">
         <h2 class="table-title" id="item-panel-title" style="margin-bottom: 20px;">Add New Menu Item</h2>
         
-        <form id="item-form" action="{{ route('restaurant.menu-items.store') }}" method="POST">
+        <form id="item-form" action="{{ route('restaurant.menu-items.store') }}" method="POST" enctype="multipart/form-data">
             @csrf
             
             <input type="hidden" name="_method" id="item-form-method" value="POST">
@@ -119,6 +127,11 @@
             <div class="form-group">
                 <label class="form-label" for="item-desc">Description</label>
                 <textarea class="form-control" id="item-desc" name="description" rows="2" placeholder="e.g. Includes rotis, paneer shaak..."></textarea>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="item-image">Dish Image</label>
+                <input class="form-control" type="file" id="item-image" name="image" accept="image/*">
             </div>
 
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">

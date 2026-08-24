@@ -8,6 +8,9 @@ use App\Http\Controllers\Customer\CustomerSubscriptionController;
 use App\Http\Controllers\Customer\CartController;
 use App\Http\Controllers\Customer\OrderController;
 use App\Http\Controllers\Customer\AddressController;
+use App\Http\Controllers\Customer\CustomerDailyMealController;
+use App\Http\Controllers\Customer\CustomerAddonController;
+use App\Http\Controllers\Customer\CustomerTaxController;
 use App\Http\Controllers\Restaurant\RestaurantProfileController;
 use App\Http\Controllers\Restaurant\RestaurantCategoryController;
 use App\Http\Controllers\Restaurant\RestaurantMenuItemController;
@@ -46,6 +49,10 @@ Route::prefix('v1')->group(function () {
             Route::get('/restaurants/{restaurantId}/categories', [CustomerMenuController::class, 'categories']);
             Route::get('/restaurants/{restaurantId}/menu', [CustomerMenuController::class, 'menu']);
             Route::get('/menu-items/{id}', [CustomerMenuController::class, 'showItem']);
+            Route::get('/restaurants/{restaurantId}/today-meal', [CustomerDailyMealController::class, 'todayMeal']);
+            Route::get('/restaurants/{restaurantId}/tomorrow-meal', [CustomerDailyMealController::class, 'tomorrowMeal']);
+            Route::get('/restaurants/{restaurantId}/addons', [CustomerAddonController::class, 'index']);
+            Route::get('/restaurants/{restaurantId}/taxes', [CustomerTaxController::class, 'index']);
 
             // Customer Addresses
             Route::apiResource('/addresses', AddressController::class);

@@ -73,9 +73,49 @@
                         <option value="INACTIVE" {{ old('status') === 'INACTIVE' ? 'selected' : '' }}>Inactive</option>
                     </select>
                 </div>
+
+                <div style="grid-column: span 2; margin-top: 15px;">
+                    <hr style="border: 0; border-top: 1px solid var(--border-color); margin-bottom: 15px;">
+                    <h3 style="font-size: 16px; font-weight: 700; color: var(--text-primary);">Manager Account Setup</h3>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Login Password</label>
+                    <input type="password" name="password" class="form-control" required placeholder="Minimum 6 characters">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Confirm Password</label>
+                    <input type="password" name="password_confirmation" class="form-control" required placeholder="Retype password">
+                </div>
+
+                <div style="grid-column: span 2; margin-top: 15px;">
+                    <hr style="border: 0; border-top: 1px solid var(--border-color); margin-bottom: 15px;">
+                    <h3 style="font-size: 16px; font-weight: 700; color: var(--text-primary);">Banking & Settlement Information</h3>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Bank Account Holder Name</label>
+                    <input type="text" name="bank_account_holder" class="form-control" value="{{ old('bank_account_holder') }}" placeholder="e.g. Royal Tiffin Ltd">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Bank Account Number</label>
+                    <input type="text" name="bank_account_number" class="form-control" value="{{ old('bank_account_number') }}" placeholder="e.g. 12345678">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">IFSC / Sort Code</label>
+                    <input type="text" name="bank_ifsc" class="form-control" value="{{ old('bank_ifsc') }}" placeholder="e.g. 60-00-04">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Bank Branch Name</label>
+                    <input type="text" name="bank_branch" class="form-control" value="{{ old('bank_branch') }}" placeholder="e.g. London High Street">
+                </div>
             </div>
 
-            <div style="display: flex; gap: 10px; margin-top: 20px; justify-content: flex-end;">
+            <div style="display: flex; gap: 10px; margin-top: 25px; justify-content: flex-end;">
                 <a href="{{ route('admin.restaurants.index') }}" class="btn btn-secondary">Cancel</a>
                 <button type="submit" class="btn btn-primary">Create Restaurant</button>
             </div>

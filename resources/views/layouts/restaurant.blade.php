@@ -379,8 +379,20 @@
             <li class="menu-item {{ Request::routeIs('restaurant.menu-items.*') ? 'active' : '' }}">
                 <a href="{{ route('restaurant.menu-items.index') }}">Menu Items</a>
             </li>
+            <li class="menu-item {{ Request::routeIs('restaurant.daily-meals.*') ? 'active' : '' }}">
+                <a href="{{ route('restaurant.daily-meals.index') }}">Daily Meals</a>
+            </li>
+            <li class="menu-item {{ Request::routeIs('restaurant.addons.*') ? 'active' : '' }}">
+                <a href="{{ route('restaurant.addons.index') }}">Add-ons</a>
+            </li>
+            <li class="menu-item {{ Request::routeIs('restaurant.subscription-plans.*') ? 'active' : '' }}">
+                <a href="{{ route('restaurant.subscription-plans.index') }}">Subscription Plans</a>
+            </li>
             <li class="menu-item {{ Request::routeIs('restaurant.subscriptions.*') ? 'active' : '' }}">
-                <a href="{{ route('restaurant.subscriptions.index') }}">Subscriptions</a>
+                <a href="{{ route('restaurant.subscriptions.index') }}">Active Subscriptions</a>
+            </li>
+            <li class="menu-item {{ Request::routeIs('restaurant.taxes.*') ? 'active' : '' }}">
+                <a href="{{ route('restaurant.taxes.index') }}">Taxes</a>
             </li>
             <li class="menu-item {{ Request::routeIs('restaurant.profile') ? 'active' : '' }}">
                 <a href="{{ route('restaurant.profile') }}">My Profile</a>

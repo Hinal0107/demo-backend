@@ -78,6 +78,30 @@ Route::middleware(['auth.restaurant'])->prefix('restaurant')->name('restaurant.'
     Route::post('/menu-items/{id}', [RestaurantWebController::class, 'menuItemsUpdate'])->name('menu-items.update');
     Route::post('/menu-items/{id}/delete', [RestaurantWebController::class, 'menuItemsDestroy'])->name('menu-items.destroy');
     
+    // Today's & Tomorrow's Meals
+    Route::get('/daily-meals', [RestaurantWebController::class, 'dailyMealsIndex'])->name('daily-meals.index');
+    Route::post('/daily-meals', [RestaurantWebController::class, 'dailyMealsStore'])->name('daily-meals.store');
+    Route::post('/daily-meals/{id}', [RestaurantWebController::class, 'dailyMealsUpdate'])->name('daily-meals.update');
+    Route::post('/daily-meals/{id}/delete', [RestaurantWebController::class, 'dailyMealsDestroy'])->name('daily-meals.destroy');
+
+    // Addons Management
+    Route::get('/addons', [RestaurantWebController::class, 'addonsIndex'])->name('addons.index');
+    Route::post('/addons', [RestaurantWebController::class, 'addonsStore'])->name('addons.store');
+    Route::post('/addons/{id}', [RestaurantWebController::class, 'addonsUpdate'])->name('addons.update');
+    Route::post('/addons/{id}/delete', [RestaurantWebController::class, 'addonsDestroy'])->name('addons.destroy');
+
+    // Taxes Config
+    Route::get('/taxes', [RestaurantWebController::class, 'taxesIndex'])->name('taxes.index');
+    Route::post('/taxes', [RestaurantWebController::class, 'taxesStore'])->name('taxes.store');
+    Route::post('/taxes/{id}', [RestaurantWebController::class, 'taxesUpdate'])->name('taxes.update');
+    Route::post('/taxes/{id}/delete', [RestaurantWebController::class, 'taxesDestroy'])->name('taxes.destroy');
+
+    // Subscription Plans (Meal Plans) Management
+    Route::get('/subscription-plans', [RestaurantWebController::class, 'subscriptionPlansIndex'])->name('subscription-plans.index');
+    Route::post('/subscription-plans', [RestaurantWebController::class, 'subscriptionPlansStore'])->name('subscription-plans.store');
+    Route::post('/subscription-plans/{id}', [RestaurantWebController::class, 'subscriptionPlansUpdate'])->name('subscription-plans.update');
+    Route::post('/subscription-plans/{id}/delete', [RestaurantWebController::class, 'subscriptionPlansDestroy'])->name('subscription-plans.destroy');
+
     // Orders management (real-time order listing & status triggers)
     Route::get('/orders', [RestaurantWebController::class, 'ordersIndex'])->name('orders.index');
     Route::get('/orders/{id}', [RestaurantWebController::class, 'ordersShow'])->name('orders.show');

@@ -23,6 +23,7 @@
         <table>
             <thead>
                 <tr>
+                    <th>Image</th>
                     <th>Sort Order</th>
                     <th>Category Name</th>
                     <th>Description</th>
@@ -33,6 +34,13 @@
             <tbody>
                 @forelse($categories as $category)
                     <tr>
+                        <td>
+                            @if($category->image)
+                                <img src="{{ $category->image }}" alt="Category Image" style="width: 50px; height: 50px; object-fit: cover; border-radius: 6px;">
+                            @else
+                                <div style="width: 50px; height: 50px; border-radius: 6px; background-color: rgba(0,0,0,0.05); display: flex; align-items: center; justify-content: center; font-size: 10px; color: var(--text-secondary);">No Image</div>
+                            @endif
+                        </td>
                         <td style="font-weight: 600;">{{ $category->sort_order }}</td>
                         <td style="font-weight: 600;">{{ $category->name }}</td>
                         <td>{{ $category->description ?: 'N/A' }}</td>
@@ -55,7 +63,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="5" style="text-align: center; color: var(--text-secondary); padding: 30px;">
+                        <td colspan="6" style="text-align: center; color: var(--text-secondary); padding: 30px;">
                             No categories found. Create one on the right.
                         </td>
                     </tr>
@@ -68,7 +76,7 @@
     <div class="table-container" style="padding: 25px;">
         <h2 class="table-title" id="panel-title" style="margin-bottom: 20px;">Add New Category</h2>
         
-        <form id="category-form" action="{{ route('restaurant.categories.store') }}" method="POST">
+        <form id="category-form" action="{{ route('restaurant.categories.store') }}" method="POST" enctype="multipart/form-data">
             @csrf
             
             <input type="hidden" name="_method" id="form-method" value="POST">
@@ -81,6 +89,11 @@
             <div class="form-group">
                 <label class="form-label" for="cat-desc">Description</label>
                 <input class="form-control" type="text" id="cat-desc" name="description" placeholder="Short summary of items">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="cat-image">Category Image</label>
+                <input class="form-control" type="file" id="cat-image" name="image" accept="image/*">
             </div>
 
             <div class="form-group">

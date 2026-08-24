@@ -78,4 +78,19 @@ class Restaurant extends Model
     {
         return $this->hasMany(Payment::class, 'restaurant_id');
     }
+
+    public function dailyMeals()
+    {
+        return $this->hasMany(DailyMeal::class, 'restaurant_id');
+    }
+
+    public function addons()
+    {
+        return $this->hasMany(Addon::class, 'restaurant_id');
+    }
+
+    public function taxes()
+    {
+        return $this->hasMany(Tax::class, 'restaurant_id');
+    }
 }

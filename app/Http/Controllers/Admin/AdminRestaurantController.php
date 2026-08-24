@@ -85,13 +85,41 @@ class AdminRestaurantController extends Controller
             'opening_time' => 'required|date_format:H:i',
             'closing_time' => 'required|date_format:H:i',
             'status' => 'required|in:ACTIVE,INACTIVE,PENDING_APPROVAL',
+            'password' => 'required|string|min:6|confirmed',
+            'bank_account_holder' => 'nullable|string|max:100',
+            'bank_account_number' => 'nullable|string|max:50',
+            'bank_ifsc' => 'nullable|string|max:20',
+            'bank_branch' => 'nullable|string|max:100',
         ]);
 
         // Fix date formats for standard MySQL Time columns
         $validated['opening_time'] .= ':00';
         $validated['closing_time'] .= ':00';
 
+        // Extract password and bank details
+        $password = $validated['password'];
+        unset($validated['password']);
+
         $restaurant = Restaurant::create($validated);
+
+        // Create the Restaurant Manager User
+        $user = \App\Models\User::create([
+            'name' => $restaurant->name . ' Manager',
+            'email' => $restaurant->email,
+            'phone' => $restaurant->phone,
+            'password' => \Illuminate\Support\Facades\Hash::make($password),
+            'firebase_uid' => 'uid-' . uniqid(),
+            'role' => 'RESTAURANT',
+            'status' => 'ACTIVE',
+        ]);
+
+        // Link User to Restaurant
+        \App\Models\RestaurantUser::create([
+            'restaurant_id' => $restaurant->id,
+            'user_id' => $user->id,
+            'role' => 'owner',
+            'status' => 'ACTIVE',
+        ]);
 
         $this->activityLogger->log(
             Auth::id(),
@@ -103,7 +131,7 @@ class AdminRestaurantController extends Controller
         );
 
         return redirect()->route('admin.restaurants.show', $restaurant->id)
-            ->with('success', 'Restaurant created successfully.');
+            ->with('success', 'Restaurant and manager account created successfully.');
     }
 
     /**
@@ -134,6 +162,10 @@ class AdminRestaurantController extends Controller
             'opening_time' => 'required|date_format:H:i',
             'closing_time' => 'required|date_format:H:i',
             'status' => 'required|in:ACTIVE,INACTIVE,BLOCKED,PENDING_APPROVAL',
+            'bank_account_holder' => 'nullable|string|max:100',
+            'bank_account_number' => 'nullable|string|max:50',
+            'bank_ifsc' => 'nullable|string|max:20',
+            'bank_branch' => 'nullable|string|max:100',
         ]);
 
         $oldData = $restaurant->toArray();

@@ -10,6 +10,7 @@ class CartItem extends Model
         'customer_id',
         'restaurant_id',
         'menu_item_id',
+        'addon_id',
         'quantity',
         'unit_price',
         'total_price',
@@ -34,5 +35,10 @@ class CartItem extends Model
     public function menuItem()
     {
         return $this->belongsTo(MenuItem::class, 'menu_item_id');
+    }
+
+    public function addon()
+    {
+        return $this->belongsTo(Addon::class, 'addon_id');
     }
 }

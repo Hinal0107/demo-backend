@@ -296,4 +296,136 @@ class TiffinServiceTest extends TestCase
 
         $response->assertStatus(422);
     }
+
+    /**
+     * Test dynamic tax calculations based on restaurant's active taxes.
+     */
+    public function test_dynamic_tax_calculations(): void
+    {
+        // 1. Create category and item
+        $catA = MenuCategory::create([
+            'restaurant_id' => $this->restaurantA->id,
+            'name' => 'Lunch',
+            'status' => 'ACTIVE',
+        ]);
+
+        $itemA = MenuItem::create([
+            'restaurant_id' => $this->restaurantA->id,
+            'category_id' => $catA->id,
+            'name' => 'Tiffin Special',
+            'price' => 100.00,
+            'veg_type' => 'VEG',
+            'status' => 'ACTIVE',
+        ]);
+
+        // 2. Set up taxes (GST 5% and VAT 12.5% = 17.5% total)
+        \App\Models\Tax::create([
+            'restaurant_id' => $this->restaurantA->id,
+            'name' => 'GST',
+            'rate' => 5.00,
+            'status' => 'ACTIVE',
+        ]);
+
+        \App\Models\Tax::create([
+            'restaurant_id' => $this->restaurantA->id,
+            'name' => 'VAT',
+            'rate' => 12.50,
+            'status' => 'ACTIVE',
+        ]);
+
+        // Place order
+        $response = $this->withHeader('Authorization', 'Bearer mock-uid-customer')
+            ->postJson('/api/v1/orders', [
+                'restaurant_id' => $this->restaurantA->id,
+                'address_id' => $this->address->id,
+                'items' => [
+                    [
+                        'menu_item_id' => $itemA->id,
+                        'quantity' => 1,
+                    ]
+                ],
+            ]);
+
+        $response->assertStatus(201);
+        // Subtotal = 100
+        // Tax = 100 * 17.5% = 17.50
+        // Delivery fee = 3.50
+        // Total = 100 + 17.50 + 3.50 = 121.00
+        $response->assertJsonFragment([
+            'subtotal' => 100.00,
+            'tax' => 17.50,
+            'total_amount' => 121.00,
+        ]);
+    }
+
+    /**
+     * Test checkout and order creation with add-ons.
+     */
+    public function test_addon_checkout_and_snapshots(): void
+    {
+        // 1. Create addon
+        $addon = \App\Models\Addon::create([
+            'restaurant_id' => $this->restaurantA->id,
+            'name' => 'Extra Butter Roti',
+            'price' => 1.50,
+            'availability' => true,
+            'status' => 'ACTIVE',
+        ]);
+
+        // 2. Place Order with addon
+        $response = $this->withHeader('Authorization', 'Bearer mock-uid-customer')
+            ->postJson('/api/v1/orders', [
+                'restaurant_id' => $this->restaurantA->id,
+                'address_id' => $this->address->id,
+                'items' => [
+                    [
+                        'addon_id' => $addon->id,
+                        'quantity' => 2,
+                    ]
+                ],
+            ]);
+
+        $response->assertStatus(201);
+        // Subtotal = 1.5 * 2 = 3.00
+        // Tax = 3 * 10% = 0.30
+        // Delivery = 3.50
+        // Total = 3 + 0.3 + 3.5 = 6.80
+        $response->assertJsonFragment([
+            'subtotal' => 3.00,
+            'tax' => 0.30,
+            'total_amount' => 6.80,
+        ]);
+
+        $this->assertDatabaseHas('order_items', [
+            'addon_id' => $addon->id,
+            'item_name' => 'Extra Butter Roti',
+            'unit_price' => 1.50,
+            'quantity' => 2,
+        ]);
+    }
+
+    /**
+     * Test fetching scheduled daily meals from the customer API.
+     */
+    public function test_customer_daily_meals_retrieval(): void
+    {
+        // Create scheduled meal for today
+        \App\Models\DailyMeal::create([
+            'restaurant_id' => $this->restaurantA->id,
+            'date' => now()->toDateString(),
+            'name' => 'Today Special Thali',
+            'price' => 10.00,
+            'veg_type' => 'VEG',
+            'status' => 'ACTIVE',
+        ]);
+
+        // Query today's meal
+        $response = $this->withHeader('Authorization', 'Bearer mock-uid-customer')
+            ->getJson("/api/v1/restaurants/{$this->restaurantA->id}/today-meal");
+
+        $response->assertStatus(200);
+        $response->assertJsonFragment([
+            'name' => 'Today Special Thali',
+        ]);
+    }
 }
