@@ -412,14 +412,52 @@ class TiffinServiceTest extends TestCase
      */
     public function test_customer_daily_meals_retrieval(): void
     {
-        // Create scheduled meal for today
+        // 1. Create a test addon
+        $addon = \App\Models\Addon::create([
+            'restaurant_id' => $this->restaurantA->id,
+            'name' => 'Extra Sweet Lassi',
+            'price' => 2.50,
+            'availability' => true,
+            'status' => 'ACTIVE',
+        ]);
+
+        // 2. Create scheduled TODAY meal with the addon
         \App\Models\DailyMeal::create([
             'restaurant_id' => $this->restaurantA->id,
             'date' => now()->toDateString(),
             'name' => 'Today Special Thali',
             'price' => 10.00,
             'veg_type' => 'VEG',
-            'is_active' => true,
+            'meal_type' => 'TODAY',
+            'addons' => [$addon->id],
+            'availability' => true,
+            'status' => 'ACTIVE',
+        ]);
+
+        // 3. Create scheduled TOMORROW meal
+        \App\Models\DailyMeal::create([
+            'restaurant_id' => $this->restaurantA->id,
+            'date' => now()->addDay()->toDateString(),
+            'name' => 'Tomorrow Special Thali',
+            'price' => 11.50,
+            'veg_type' => 'VEG',
+            'meal_type' => 'TOMORROW',
+            'addons' => [],
+            'availability' => true,
+            'status' => 'ACTIVE',
+        ]);
+
+        // 4. Create scheduled WEEKLY meal with addon
+        \App\Models\DailyMeal::create([
+            'restaurant_id' => $this->restaurantA->id,
+            'date' => now()->toDateString(),
+            'name' => 'Weekly Special Box',
+            'price' => 45.00,
+            'veg_type' => 'VEG',
+            'meal_type' => 'WEEKLY',
+            'addons' => [$addon->id],
+            'availability' => true,
+            'status' => 'ACTIVE',
         ]);
 
         // Query today's meal
@@ -430,6 +468,35 @@ class TiffinServiceTest extends TestCase
         $response->assertJsonFragment([
             'name' => 'Today Special Thali',
         ]);
+        // Assert addon is returned in today's meal response
+        $this->assertEquals('Extra Sweet Lassi', $response->json('data.addons.0.name'));
+
+        // Query tomorrow's meal
+        $response = $this->actingAs($this->customer, 'sanctum')
+            ->getJson("/api/v1/restaurants/{$this->restaurantA->id}/tomorrow-meal");
+
+        $response->assertStatus(200);
+        $response->assertJsonFragment([
+            'name' => 'Tomorrow Special Thali',
+        ]);
+
+        // Query weekly meal
+        $response = $this->actingAs($this->customer, 'sanctum')
+            ->getJson("/api/v1/restaurants/{$this->restaurantA->id}/weekly-meal");
+
+        $response->assertStatus(200);
+        $response->assertJsonFragment([
+            'name' => 'Weekly Special Box',
+        ]);
+        $this->assertEquals('Extra Sweet Lassi', $response->json('data.addons.0.name'));
+
+        // Query daily meals with date filter
+        $response = $this->actingAs($this->customer, 'sanctum')
+            ->getJson("/api/v1/restaurants/{$this->restaurantA->id}/daily-meals?date=" . now()->toDateString());
+
+        $response->assertStatus(200);
+        // We have Today Special Thali and Weekly Special Box scheduled for today
+        $this->assertCount(2, $response->json('data'));
     }
 
     /**

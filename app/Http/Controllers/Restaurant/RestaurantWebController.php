@@ -402,7 +402,8 @@ class RestaurantWebController extends Controller
         $restaurant = Auth::user()->restaurant;
         $dailyMeals = $restaurant->dailyMeals()->orderBy('date', 'desc')->get();
         $menuItems = $restaurant->menuItems()->active()->get();
-        return view('restaurant.daily_meals', compact('dailyMeals', 'menuItems', 'restaurant'));
+        $addons = $restaurant->addons()->active()->get();
+        return view('restaurant.daily_meals', compact('dailyMeals', 'menuItems', 'addons', 'restaurant'));
     }
 
     public function dailyMealsStore(Request $request)
@@ -416,6 +417,9 @@ class RestaurantWebController extends Controller
             'price' => 'required|numeric|min:0',
             'discount_price' => 'nullable|numeric|min:0|lte:price',
             'veg_type' => 'required|in:VEG,NON_VEG,JAIN',
+            'meal_type' => 'required|in:TODAY,TOMORROW,WEEKLY',
+            'addons' => 'nullable|array',
+            'addons.*' => 'exists:addons,id',
             'availability' => 'required|boolean',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
@@ -423,6 +427,10 @@ class RestaurantWebController extends Controller
         if ($request->hasFile('image')) {
             $path = $request->file('image')->store('daily-meals', 'public');
             $data['image'] = asset('storage/' . $path);
+        }
+
+        if (!isset($data['addons'])) {
+            $data['addons'] = [];
         }
 
         $restaurant->dailyMeals()->create($data + ['status' => 'ACTIVE']);
@@ -442,6 +450,9 @@ class RestaurantWebController extends Controller
             'price' => 'required|numeric|min:0',
             'discount_price' => 'nullable|numeric|min:0|lte:price',
             'veg_type' => 'required|in:VEG,NON_VEG,JAIN',
+            'meal_type' => 'required|in:TODAY,TOMORROW,WEEKLY',
+            'addons' => 'nullable|array',
+            'addons.*' => 'exists:addons,id',
             'availability' => 'required|boolean',
             'status' => 'required|in:ACTIVE,INACTIVE',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
@@ -450,6 +461,10 @@ class RestaurantWebController extends Controller
         if ($request->hasFile('image')) {
             $path = $request->file('image')->store('daily-meals', 'public');
             $data['image'] = asset('storage/' . $path);
+        }
+
+        if (!isset($data['addons'])) {
+            $data['addons'] = [];
         }
 
         $meal->update($data);

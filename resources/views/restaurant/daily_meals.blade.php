@@ -53,8 +53,22 @@
                                 @endif
                             </td>
                             <td>
-                                <div style="font-weight: 600;">{{ $meal->name }}</div>
+                                <div style="font-weight: 600; display: flex; align-items: center; gap: 5px;">
+                                    {{ $meal->name }}
+                                    @if($meal->meal_type === 'WEEKLY')
+                                        <span class="badge badge-info" style="font-size: 9px; padding: 2px 6px;">WEEKLY</span>
+                                    @elseif($meal->meal_type === 'TOMORROW')
+                                        <span class="badge badge-warning" style="font-size: 9px; padding: 2px 6px;">TOMORROW</span>
+                                    @else
+                                        <span class="badge badge-success" style="font-size: 9px; padding: 2px 6px;">TODAY</span>
+                                    @endif
+                                </div>
                                 <div style="font-size: 11px; color: var(--text-secondary);">{{ $meal->description }}</div>
+                                @if($meal->addons && is_array($meal->addons) && count($meal->addons) > 0)
+                                    <div style="font-size: 10px; color: var(--accent-primary); margin-top: 4px; font-weight: 600;">
+                                        Add-ons: {{ implode(', ', \App\Models\Addon::whereIn('id', $meal->addons)->pluck('name')->toArray()) }}
+                                    </div>
+                                @endif
                             </td>
                             <td>
                                 @if($meal->discount_price)
@@ -125,9 +139,36 @@
             
             <input type="hidden" name="_method" id="form-method" value="POST">
 
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                <div class="form-group">
+                    <label class="form-label" for="meal-date">Date to Schedule</label>
+                    <input class="form-control" type="date" id="meal-date" name="date" required value="{{ date('Y-m-d') }}">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="meal-type">Meal Type</label>
+                    <select class="form-control" id="meal-type" name="meal_type" required>
+                        <option value="TODAY">Today's Meal</option>
+                        <option value="TOMORROW">Tomorrow's Meal</option>
+                        <option value="WEEKLY">Weekly Meal</option>
+                    </select>
+                </div>
+            </div>
+
             <div class="form-group">
-                <label class="form-label" for="meal-date">Date to Schedule</label>
-                <input class="form-control" type="date" id="meal-date" name="date" required value="{{ date('Y-m-d') }}">
+                <label class="form-label">Available Add-ons</label>
+                <div style="max-height: 120px; overflow-y: auto; border: 1px solid rgba(0,0,0,0.15); padding: 10px; border-radius: 6px; background-color: white;">
+                    @forelse($addons as $addon)
+                        <div style="display: flex; align-items: center; margin-bottom: 8px; gap: 8px;">
+                            <input type="checkbox" name="addons[]" value="{{ $addon->id }}" id="addon-{{ $addon->id }}">
+                            <label for="addon-{{ $addon->id }}" style="font-size: 13px; cursor: pointer; display: flex; align-items: center; justify-content: space-between; width: 100%;">
+                                <span>{{ $addon->name }}</span>
+                                <span style="color: var(--accent-primary); font-weight: 600;">+£{{ number_format($addon->price, 2) }}</span>
+                            </label>
+                        </div>
+                    @empty
+                        <div style="font-size: 12px; color: var(--text-secondary);">No active add-ons available. Create them in the Add-ons tab.</div>
+                    @endforelse
+                </div>
             </div>
 
             <div class="form-group">
@@ -220,6 +261,19 @@
         document.getElementById('meal-veg').value = meal.veg_type;
         document.getElementById('meal-availability').value = meal.availability ? "1" : "0";
         document.getElementById('meal-status').value = meal.status;
+        document.getElementById('meal-type').value = meal.meal_type || 'TODAY';
+        
+        // Uncheck all first
+        const checkboxes = document.querySelectorAll('input[name="addons[]"]');
+        checkboxes.forEach(cb => cb.checked = false);
+        
+        // Check selected
+        if (meal.addons && Array.isArray(meal.addons)) {
+            meal.addons.forEach(id => {
+                const cb = document.getElementById('addon-' + id);
+                if (cb) cb.checked = true;
+            });
+        }
         
         document.getElementById('status-group').style.display = 'block';
         document.getElementById('cancel-btn').style.display = 'block';
@@ -233,6 +287,10 @@
     function resetForm() {
         document.getElementById('panel-title').innerText = 'Schedule Daily Meal';
         document.getElementById('meal-form').reset();
+        document.getElementById('meal-type').value = 'TODAY';
+        const checkboxes = document.querySelectorAll('input[name="addons[]"]');
+        checkboxes.forEach(cb => cb.checked = false);
+        
         document.getElementById('status-group').style.display = 'none';
         document.getElementById('cancel-btn').style.display = 'none';
         document.getElementById('submit-btn').innerText = 'Schedule Meal';

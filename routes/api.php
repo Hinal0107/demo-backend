@@ -52,6 +52,8 @@ Route::prefix('v1')->group(function () {
             Route::get('/menu-items/{id}', [CustomerMenuController::class, 'showItem']);
             Route::get('/restaurants/{restaurantId}/today-meal', [CustomerDailyMealController::class, 'todayMeal']);
             Route::get('/restaurants/{restaurantId}/tomorrow-meal', [CustomerDailyMealController::class, 'tomorrowMeal']);
+            Route::get('/restaurants/{restaurantId}/weekly-meal', [CustomerDailyMealController::class, 'weeklyMeal']);
+            Route::get('/restaurants/{restaurantId}/daily-meals', [CustomerDailyMealController::class, 'index']);
             Route::get('/restaurants/{restaurantId}/addons', [CustomerAddonController::class, 'index']);
             Route::get('/restaurants/{restaurantId}/taxes', [CustomerTaxController::class, 'index']);
 

@@ -18,6 +18,8 @@ class DailyMeal extends Model
         'price',
         'discount_price',
         'veg_type',
+        'meal_type',
+        'addons',
         'availability',
         'status',
     ];
@@ -27,6 +29,7 @@ class DailyMeal extends Model
         'price' => 'decimal:2',
         'discount_price' => 'decimal:2',
         'availability' => 'boolean',
+        'addons' => 'array',
     ];
 
     public function scopeActive($query)
