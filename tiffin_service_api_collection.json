@@ -1,1141 +1,1520 @@
 {
 	"info": {
-		"_postman_id": "a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d",
-		"name": "Tiffin Service API",
-		"description": "Complete REST API Collection for Tiffin Service Management Backend, with mock Firebase Authentication credentials and Worldpay simulation requests.",
+		"_postman_id": "tiffin-api-v2-2026-08-25",
+		"name": "Tiffin Service API v1",
+		"description": "Complete & up-to-date REST API Collection for the Tiffin Service Backend.\n\n**Base URL variable:** `{{base_url}}` = http://localhost:8888/api/v1\n\n**Auth tokens are auto-saved** by the Login scripts into:\n- `{{customer_token}}` — set after customer login\n- `{{restaurant_token}}` — set after restaurant login\n\nGenerated from source code on 2026-08-25.",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8888/api/v1",
+			"type": "string"
+		},
+		{
+			"key": "customer_token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "restaurant_token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "restaurant_id",
+			"value": "1",
+			"type": "string"
+		},
+		{
+			"key": "order_id",
+			"value": "1",
+			"type": "string"
+		},
+		{
+			"key": "subscription_id",
+			"value": "1",
+			"type": "string"
+		},
+		{
+			"key": "address_id",
+			"value": "1",
+			"type": "string"
+		},
+		{
+			"key": "cart_item_id",
+			"value": "1",
+			"type": "string"
+		},
+		{
+			"key": "menu_item_id",
+			"value": "1",
+			"type": "string"
+		},
+		{
+			"key": "category_id",
+			"value": "1",
+			"type": "string"
+		},
+		{
+			"key": "plan_id",
+			"value": "1",
+			"type": "string"
+		},
+		{
+			"key": "notification_id",
+			"value": "1",
+			"type": "string"
+		},
+		{
+			"key": "order_number",
+			"value": "ORD-20260825-0001",
+			"type": "string"
+		}
+	],
 	"item": [
 		{
-			"name": "Auth",
+			"name": "🔐 Authentication",
+			"description": "Public and protected auth endpoints. Login scripts auto-save tokens.",
 			"item": [
 				{
 					"name": "Register User",
 					"request": {
 						"method": "POST",
 						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							},
-							{
-								"key": "Accept",
-								"value": "application/json"
-							}
+							{ "key": "Content-Type", "value": "application/json" },
+							{ "key": "Accept", "value": "application/json" }
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"name\": \"Jane Customer\",\n  \"email\": \"jane@customer.com\",\n  \"phone\": \"+447000000010\",\n  \"firebase_uid\": \"mock-uid-customer-jane\",\n  \"role\": \"customer\"\n}"
+							"raw": "{\n  \"name\": \"Hinal Shah\",\n  \"email\": \"hinal@example.com\",\n  \"phone\": \"9876543210\",\n  \"password\": \"password123\",\n  \"password_confirmation\": \"password123\",\n  \"role\": \"CUSTOMER\"\n}",
+							"options": { "raw": { "language": "json" } }
 						},
 						"url": {
 							"raw": "{{base_url}}/auth/register",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"auth",
-								"register"
-							]
-						}
+							"host": ["{{base_url}}"],
+							"path": ["auth", "register"]
+						},
+						"description": "Register a new user. Role can be CUSTOMER or RESTAURANT."
 					}
 				},
 				{
-					"name": "Login User",
+					"name": "Login — Customer",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const res = pm.response.json();",
+									"if (res.success && res.data && res.data.token) {",
+									"    pm.collectionVariables.set('customer_token', res.data.token);",
+									"    console.log('✅ customer_token saved:', res.data.token);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
 					"request": {
 						"method": "POST",
 						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							},
-							{
-								"key": "Accept",
-								"value": "application/json"
-							}
+							{ "key": "Content-Type", "value": "application/json" },
+							{ "key": "Accept", "value": "application/json" }
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"firebase_uid\": \"mock-uid-customer\",\n  \"device_type\": \"android\",\n  \"fcm_token\": \"mock-fcm-token-123456\",\n  \"device_id\": \"device-android-xyz\"\n}"
+							"raw": "{\n  \"email\": \"hinal@example.com\",\n  \"password\": \"password123\"\n}",
+							"options": { "raw": { "language": "json" } }
 						},
 						"url": {
 							"raw": "{{base_url}}/auth/login",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"auth",
-								"login"
-							]
+							"host": ["{{base_url}}"],
+							"path": ["auth", "login"]
+						},
+						"description": "Login as a CUSTOMER. Token is automatically saved to {{customer_token}}."
+					}
+				},
+				{
+					"name": "Login — Restaurant",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const res = pm.response.json();",
+									"if (res.success && res.data && res.data.token) {",
+									"    pm.collectionVariables.set('restaurant_token', res.data.token);",
+									"    if (res.data.restaurant) {",
+									"        pm.collectionVariables.set('restaurant_id', String(res.data.restaurant));",
+									"    }",
+									"    console.log('✅ restaurant_token saved:', res.data.token);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
 						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" },
+							{ "key": "Accept", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"restaurant@example.com\",\n  \"password\": \"password123\"\n}",
+							"options": { "raw": { "language": "json" } }
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/login",
+							"host": ["{{base_url}}"],
+							"path": ["auth", "login"]
+						},
+						"description": "Login as a RESTAURANT owner. Token is automatically saved to {{restaurant_token}}."
 					}
 				},
 				{
 					"name": "Get Profile (Me)",
 					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{customer_token}}",
-									"type": "string"
-								}
-							]
-						},
+						"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{customer_token}}", "type": "string" }] },
 						"method": "GET",
-						"header": [
-							{
-								"key": "Accept",
-								"value": "application/json"
-							}
-						],
+						"header": [{ "key": "Accept", "value": "application/json" }],
 						"url": {
 							"raw": "{{base_url}}/auth/me",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"auth",
-								"me"
-							]
-						}
+							"host": ["{{base_url}}"],
+							"path": ["auth", "me"]
+						},
+						"description": "Returns the currently authenticated user's profile."
 					}
 				},
 				{
 					"name": "Update Profile",
 					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{customer_token}}",
-									"type": "string"
-								}
-							]
-						},
+						"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{customer_token}}", "type": "string" }] },
 						"method": "PUT",
 						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							},
-							{
-								"key": "Accept",
-								"value": "application/json"
-							}
+							{ "key": "Content-Type", "value": "application/json" },
+							{ "key": "Accept", "value": "application/json" }
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"name\": \"John Customer Edited\",\n  \"phone\": \"+447000000003\"\n}"
+							"raw": "{\n  \"name\": \"Hinal Shah Updated\",\n  \"phone\": \"9876543210\"\n}",
+							"options": { "raw": { "language": "json" } }
 						},
 						"url": {
 							"raw": "{{base_url}}/auth/profile",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"auth",
-								"profile"
-							]
+							"host": ["{{base_url}}"],
+							"path": ["auth", "profile"]
 						}
 					}
 				},
 				{
-					"name": "Logout User",
+					"name": "Logout",
 					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{customer_token}}",
-									"type": "string"
-								}
-							]
-						},
+						"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{customer_token}}", "type": "string" }] },
 						"method": "POST",
 						"header": [
-							{
-								"key": "Accept",
-								"value": "application/json"
-							}
+							{ "key": "Content-Type", "value": "application/json" },
+							{ "key": "Accept", "value": "application/json" }
 						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"fcm_token\": \"optional-device-fcm-token\"\n}",
+							"options": { "raw": { "language": "json" } }
+						},
 						"url": {
 							"raw": "{{base_url}}/auth/logout",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"auth",
-								"logout"
-							]
+							"host": ["{{base_url}}"],
+							"path": ["auth", "logout"]
+						},
+						"description": "Invalidates the current Sanctum token. Optionally pass fcm_token to deregister the device."
+					}
+				}
+			]
+		},
+		{
+			"name": "🍽️ Customer — Restaurants & Menu",
+			"description": "Restaurant discovery and menu browsing. Role: CUSTOMER.",
+			"item": [
+				{
+					"name": "List Restaurants",
+					"request": {
+						"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{customer_token}}", "type": "string" }] },
+						"method": "GET",
+						"header": [{ "key": "Accept", "value": "application/json" }],
+						"url": {
+							"raw": "{{base_url}}/restaurants",
+							"host": ["{{base_url}}"],
+							"path": ["restaurants"]
+						}
+					}
+				},
+				{
+					"name": "Get Restaurant Details",
+					"request": {
+						"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{customer_token}}", "type": "string" }] },
+						"method": "GET",
+						"header": [{ "key": "Accept", "value": "application/json" }],
+						"url": {
+							"raw": "{{base_url}}/restaurants/{{restaurant_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["restaurants", "{{restaurant_id}}"]
+						}
+					}
+				},
+				{
+					"name": "Get Restaurant Categories",
+					"request": {
+						"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{customer_token}}", "type": "string" }] },
+						"method": "GET",
+						"header": [{ "key": "Accept", "value": "application/json" }],
+						"url": {
+							"raw": "{{base_url}}/restaurants/{{restaurant_id}}/categories",
+							"host": ["{{base_url}}"],
+							"path": ["restaurants", "{{restaurant_id}}", "categories"]
+						}
+					}
+				},
+				{
+					"name": "Get Restaurant Menu",
+					"request": {
+						"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{customer_token}}", "type": "string" }] },
+						"method": "GET",
+						"header": [{ "key": "Accept", "value": "application/json" }],
+						"url": {
+							"raw": "{{base_url}}/restaurants/{{restaurant_id}}/menu",
+							"host": ["{{base_url}}"],
+							"path": ["restaurants", "{{restaurant_id}}", "menu"]
+						}
+					}
+				},
+				{
+					"name": "Get Menu Item Details",
+					"request": {
+						"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{customer_token}}", "type": "string" }] },
+						"method": "GET",
+						"header": [{ "key": "Accept", "value": "application/json" }],
+						"url": {
+							"raw": "{{base_url}}/menu-items/{{menu_item_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["menu-items", "{{menu_item_id}}"]
+						}
+					}
+				},
+				{
+					"name": "Get Restaurant Addons",
+					"request": {
+						"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{customer_token}}", "type": "string" }] },
+						"method": "GET",
+						"header": [{ "key": "Accept", "value": "application/json" }],
+						"url": {
+							"raw": "{{base_url}}/restaurants/{{restaurant_id}}/addons",
+							"host": ["{{base_url}}"],
+							"path": ["restaurants", "{{restaurant_id}}", "addons"]
+						}
+					}
+				},
+				{
+					"name": "Get Restaurant Taxes",
+					"request": {
+						"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{customer_token}}", "type": "string" }] },
+						"method": "GET",
+						"header": [{ "key": "Accept", "value": "application/json" }],
+						"url": {
+							"raw": "{{base_url}}/restaurants/{{restaurant_id}}/taxes",
+							"host": ["{{base_url}}"],
+							"path": ["restaurants", "{{restaurant_id}}", "taxes"]
 						}
 					}
 				}
 			]
 		},
 		{
-			"name": "Customer",
+			"name": "🗓️ Customer — Daily Meals",
+			"description": "View today's, tomorrow's, weekly and date-based meals. Role: CUSTOMER.",
 			"item": [
 				{
-					"name": "List Restaurants",
+					"name": "Get Today's Meal",
 					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{customer_token}}",
-									"type": "string"
-								}
-							]
-						},
+						"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{customer_token}}", "type": "string" }] },
 						"method": "GET",
-						"header": [
-							{
-								"key": "Accept",
-								"value": "application/json"
-							}
-						],
+						"header": [{ "key": "Accept", "value": "application/json" }],
 						"url": {
-							"raw": "{{base_url}}/restaurants?page=1&limit=20&search=Royal",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"restaurants"
-							],
-							"query": [
-								{
-									"key": "page",
-									"value": "1"
-								},
-								{
-									"key": "limit",
-									"value": "20"
-								},
-								{
-									"key": "search",
-									"value": "Royal"
-								}
-							]
+							"raw": "{{base_url}}/restaurants/{{restaurant_id}}/today-meal",
+							"host": ["{{base_url}}"],
+							"path": ["restaurants", "{{restaurant_id}}", "today-meal"]
+						},
+						"description": "Returns today's scheduled meal with addons. Falls back to any meal scheduled for today if no explicit TODAY type found."
+					}
+				},
+				{
+					"name": "Get Tomorrow's Meal",
+					"request": {
+						"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{customer_token}}", "type": "string" }] },
+						"method": "GET",
+						"header": [{ "key": "Accept", "value": "application/json" }],
+						"url": {
+							"raw": "{{base_url}}/restaurants/{{restaurant_id}}/tomorrow-meal",
+							"host": ["{{base_url}}"],
+							"path": ["restaurants", "{{restaurant_id}}", "tomorrow-meal"]
 						}
 					}
 				},
 				{
-					"name": "Restaurant Categories",
+					"name": "Get Weekly Meal Plan",
 					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{customer_token}}",
-									"type": "string"
-								}
-							]
-						},
+						"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{customer_token}}", "type": "string" }] },
 						"method": "GET",
-						"header": [
-							{
-								"key": "Accept",
-								"value": "application/json"
-							}
-						],
+						"header": [{ "key": "Accept", "value": "application/json" }],
 						"url": {
-							"raw": "{{base_url}}/restaurants/1/categories",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"restaurants",
-								"1",
-								"categories"
-							]
+							"raw": "{{base_url}}/restaurants/{{restaurant_id}}/weekly-meal",
+							"host": ["{{base_url}}"],
+							"path": ["restaurants", "{{restaurant_id}}", "weekly-meal"]
 						}
 					}
 				},
 				{
-					"name": "Restaurant Menu Items",
+					"name": "Get Daily Meals (by date)",
 					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{customer_token}}",
-									"type": "string"
-								}
-							]
-						},
+						"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{customer_token}}", "type": "string" }] },
 						"method": "GET",
-						"header": [
-							{
-								"key": "Accept",
-								"value": "application/json"
-							}
-						],
+						"header": [{ "key": "Accept", "value": "application/json" }],
 						"url": {
-							"raw": "{{base_url}}/restaurants/1/menu?category_id=1&limit=10",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"restaurants",
-								"1",
-								"menu"
-							],
-							"query": [
-								{
-									"key": "category_id",
-									"value": "1"
-								},
-								{
-									"key": "limit",
-									"value": "10"
-								}
-							]
+							"raw": "{{base_url}}/restaurants/{{restaurant_id}}/daily-meals?date=2026-08-25",
+							"host": ["{{base_url}}"],
+							"path": ["restaurants", "{{restaurant_id}}", "daily-meals"],
+							"query": [{ "key": "date", "value": "2026-08-25", "description": "YYYY-MM-DD — defaults to today" }]
 						}
 					}
-				},
-				{
-					"name": "Menu Item Details",
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{customer_token}}",
-									"type": "string"
-								}
-							]
-						},
-						"method": "GET",
-						"header": [
-							{
-								"key": "Accept",
-								"value": "application/json"
-							}
-						],
-						"url": {
-							"raw": "{{base_url}}/menu-items/1",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"menu-items",
-								"1"
-							]
-						}
-					}
-				},
-				{
-					"name": "Get Addresses",
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{customer_token}}",
-									"type": "string"
-								}
-							]
-						},
-						"method": "GET",
-						"header": [
-							{
-								"key": "Accept",
-								"value": "application/json"
-							}
-						],
-						"url": {
-							"raw": "{{base_url}}/addresses",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"addresses"
-							]
-						}
-					}
-				},
-				{
-					"name": "Add Address",
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{customer_token}}",
-									"type": "string"
-								}
-							]
-						},
-						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							},
-							{
-								"key": "Accept",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"name\": \"John Office\",\n  \"phone\": \"+447000000003\",\n  \"address_line_1\": \"Unit 12, Tech Hub\",\n  \"address_line_2\": \"Silicon Roundabout\",\n  \"city\": \"London\",\n  \"state\": \"Greater London\",\n  \"country\": \"United Kingdom\",\n  \"pincode\": \"EC1V 2NX\",\n  \"is_default\": false\n}"
-						},
-						"url": {
-							"raw": "{{base_url}}/addresses",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"addresses"
-							]
-						}
-					}
-				},
+				}
+			]
+		},
+		{
+			"name": "🛒 Customer — Cart",
+			"description": "Cart management. Items must belong to a single restaurant. Role: CUSTOMER.",
+			"item": [
 				{
 					"name": "Get Cart",
 					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{customer_token}}",
-									"type": "string"
-								}
-							]
-						},
+						"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{customer_token}}", "type": "string" }] },
 						"method": "GET",
-						"header": [
-							{
-								"key": "Accept",
-								"value": "application/json"
-							}
-						],
+						"header": [{ "key": "Accept", "value": "application/json" }],
 						"url": {
 							"raw": "{{base_url}}/cart",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"cart"
-							]
-						}
+							"host": ["{{base_url}}"],
+							"path": ["cart"]
+						},
+						"description": "Returns all cart items with subtotal and restaurant_id."
 					}
 				},
 				{
-					"name": "Add Item to Cart",
+					"name": "Add Item to Cart (Menu Item)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const res = pm.response.json();",
+									"if (res.success && res.data && res.data.id) {",
+									"    pm.collectionVariables.set('cart_item_id', String(res.data.id));",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
 					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{customer_token}}",
-									"type": "string"
-								}
-							]
-						},
+						"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{customer_token}}", "type": "string" }] },
 						"method": "POST",
 						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							},
-							{
-								"key": "Accept",
-								"value": "application/json"
-							}
+							{ "key": "Content-Type", "value": "application/json" },
+							{ "key": "Accept", "value": "application/json" }
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"restaurant_id\": 1,\n  \"menu_item_id\": 2,\n  \"quantity\": 2\n}"
+							"raw": "{\n  \"restaurant_id\": 1,\n  \"menu_item_id\": 1,\n  \"addon_id\": null,\n  \"quantity\": 2\n}",
+							"options": { "raw": { "language": "json" } }
 						},
 						"url": {
 							"raw": "{{base_url}}/cart/items",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"cart",
-								"items"
-							]
-						}
+							"host": ["{{base_url}}"],
+							"path": ["cart", "items"]
+						},
+						"description": "Provide either menu_item_id OR addon_id (not both). Items from different restaurants will be rejected."
 					}
 				},
 				{
-					"name": "Create Order",
+					"name": "Add Addon to Cart",
 					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{customer_token}}",
-									"type": "string"
-								}
-							]
-						},
+						"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{customer_token}}", "type": "string" }] },
 						"method": "POST",
 						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							},
-							{
-								"key": "Accept",
-								"value": "application/json"
-							}
+							{ "key": "Content-Type", "value": "application/json" },
+							{ "key": "Accept", "value": "application/json" }
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"restaurant_id\": 1,\n  \"address_id\": 1,\n  \"items\": [\n    {\n      \"menu_item_id\": 2,\n      \"quantity\": 2\n    }\n  ],\n  \"scheduled_date\": \"2026-08-20\",\n  \"notes\": \"Please deliver before 1 PM\"\n}"
+							"raw": "{\n  \"restaurant_id\": 1,\n  \"menu_item_id\": null,\n  \"addon_id\": 1,\n  \"quantity\": 1\n}",
+							"options": { "raw": { "language": "json" } }
+						},
+						"url": {
+							"raw": "{{base_url}}/cart/items",
+							"host": ["{{base_url}}"],
+							"path": ["cart", "items"]
+						}
+					}
+				},
+				{
+					"name": "Update Cart Item Quantity",
+					"request": {
+						"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{customer_token}}", "type": "string" }] },
+						"method": "PUT",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" },
+							{ "key": "Accept", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"quantity\": 3\n}",
+							"options": { "raw": { "language": "json" } }
+						},
+						"url": {
+							"raw": "{{base_url}}/cart/items/{{cart_item_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["cart", "items", "{{cart_item_id}}"]
+						}
+					}
+				},
+				{
+					"name": "Remove Cart Item",
+					"request": {
+						"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{customer_token}}", "type": "string" }] },
+						"method": "DELETE",
+						"header": [{ "key": "Accept", "value": "application/json" }],
+						"url": {
+							"raw": "{{base_url}}/cart/items/{{cart_item_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["cart", "items", "{{cart_item_id}}"]
+						}
+					}
+				},
+				{
+					"name": "Clear Entire Cart",
+					"request": {
+						"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{customer_token}}", "type": "string" }] },
+						"method": "DELETE",
+						"header": [{ "key": "Accept", "value": "application/json" }],
+						"url": {
+							"raw": "{{base_url}}/cart",
+							"host": ["{{base_url}}"],
+							"path": ["cart"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "📦 Customer — Orders",
+			"description": "Order placement, listing, details, cancellation & real-time tracking. Role: CUSTOMER.",
+			"item": [
+				{
+					"name": "Place Order",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const res = pm.response.json();",
+									"if (res.success && res.data && res.data.id) {",
+									"    pm.collectionVariables.set('order_id', String(res.data.id));",
+									"    pm.collectionVariables.set('order_number', res.data.order_number || '');",
+									"    console.log('✅ order_id saved:', res.data.id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{customer_token}}", "type": "string" }] },
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" },
+							{ "key": "Accept", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"restaurant_id\": 1,\n  \"address_id\": 1,\n  \"delivery_notes\": \"Leave at the door please\",\n  \"items\": [\n    {\n      \"menu_item_id\": 1,\n      \"quantity\": 2\n    }\n  ]\n}",
+							"options": { "raw": { "language": "json" } }
 						},
 						"url": {
 							"raw": "{{base_url}}/orders",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"orders"
+							"host": ["{{base_url}}"],
+							"path": ["orders"]
+						},
+						"description": "Creates an order. Proceed to Worldpay payment simulation after this step."
+					}
+				},
+				{
+					"name": "List My Orders",
+					"request": {
+						"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{customer_token}}", "type": "string" }] },
+						"method": "GET",
+						"header": [{ "key": "Accept", "value": "application/json" }],
+						"url": {
+							"raw": "{{base_url}}/orders?status=active&limit=20",
+							"host": ["{{base_url}}"],
+							"path": ["orders"],
+							"query": [
+								{ "key": "status", "value": "active", "description": "active | PENDING | CONFIRMED | PREPARING | READY | COMPLETED | CANCELLED" },
+								{ "key": "restaurant_id", "value": "", "disabled": true },
+								{ "key": "from_date", "value": "", "disabled": true, "description": "YYYY-MM-DD" },
+								{ "key": "to_date", "value": "", "disabled": true, "description": "YYYY-MM-DD" },
+								{ "key": "limit", "value": "20" }
 							]
 						}
 					}
 				},
 				{
-					"name": "List Orders",
+					"name": "Get Order Details",
 					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{customer_token}}",
-									"type": "string"
-								}
-							]
-						},
+						"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{customer_token}}", "type": "string" }] },
 						"method": "GET",
-						"header": [
-							{
-								"key": "Accept",
-								"value": "application/json"
-							}
-						],
+						"header": [{ "key": "Accept", "value": "application/json" }],
 						"url": {
-							"raw": "{{base_url}}/orders?status=active",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"orders"
-							],
-							"query": [
-								{
-									"key": "status",
-									"value": "active"
-								}
-							]
-						}
+							"raw": "{{base_url}}/orders/{{order_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["orders", "{{order_id}}"]
+						},
+						"description": "Returns full order with items, address, restaurant and payments."
+					}
+				},
+				{
+					"name": "Cancel Order",
+					"request": {
+						"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{customer_token}}", "type": "string" }] },
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" },
+							{ "key": "Accept", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"reason\": \"Changed my mind\"\n}",
+							"options": { "raw": { "language": "json" } }
+						},
+						"url": {
+							"raw": "{{base_url}}/orders/{{order_id}}/cancel",
+							"host": ["{{base_url}}"],
+							"path": ["orders", "{{order_id}}", "cancel"]
+						},
+						"description": "Only allowed when order_status is PENDING or CONFIRMED. Kitchen-started orders cannot be cancelled."
 					}
 				},
 				{
 					"name": "Track Order Timeline",
 					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{customer_token}}",
-									"type": "string"
-								}
-							]
-						},
+						"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{customer_token}}", "type": "string" }] },
 						"method": "GET",
-						"header": [
-							{
-								"key": "Accept",
-								"value": "application/json"
-							}
-						],
+						"header": [{ "key": "Accept", "value": "application/json" }],
 						"url": {
-							"raw": "{{base_url}}/orders/1/tracking",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"orders",
-								"1",
-								"tracking"
-							]
+							"raw": "{{base_url}}/orders/{{order_id}}/tracking",
+							"host": ["{{base_url}}"],
+							"path": ["orders", "{{order_id}}", "tracking"]
+						},
+						"description": "Returns a 6-step timeline: PAID → CONFIRMED → PREPARING → READY → OUT_FOR_DELIVERY → DELIVERED."
+					}
+				}
+			]
+		},
+		{
+			"name": "📍 Customer — Addresses",
+			"description": "CRUD for customer delivery addresses. Role: CUSTOMER.",
+			"item": [
+				{
+					"name": "List Addresses",
+					"request": {
+						"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{customer_token}}", "type": "string" }] },
+						"method": "GET",
+						"header": [{ "key": "Accept", "value": "application/json" }],
+						"url": {
+							"raw": "{{base_url}}/addresses",
+							"host": ["{{base_url}}"],
+							"path": ["addresses"]
 						}
 					}
 				},
 				{
-					"name": "Create Subscription",
+					"name": "Create Address",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const res = pm.response.json();",
+									"if (res.success && res.data && res.data.id) {",
+									"    pm.collectionVariables.set('address_id', String(res.data.id));",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
 					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{customer_token}}",
-									"type": "string"
-								}
-							]
-						},
+						"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{customer_token}}", "type": "string" }] },
 						"method": "POST",
 						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							},
-							{
-								"key": "Accept",
-								"value": "application/json"
-							}
+							{ "key": "Content-Type", "value": "application/json" },
+							{ "key": "Accept", "value": "application/json" }
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"restaurant_id\": 1,\n  \"subscription_plan_id\": 1,\n  \"start_date\": \"2026-08-20\",\n  \"address_id\": 1,\n  \"auto_renew\": true\n}"
+							"raw": "{\n  \"label\": \"Home\",\n  \"line1\": \"123 MG Road\",\n  \"line2\": \"Apt 4B\",\n  \"city\": \"Ahmedabad\",\n  \"state\": \"Gujarat\",\n  \"pincode\": \"380001\",\n  \"latitude\": 23.0225,\n  \"longitude\": 72.5714,\n  \"is_default\": true\n}",
+							"options": { "raw": { "language": "json" } }
+						},
+						"url": {
+							"raw": "{{base_url}}/addresses",
+							"host": ["{{base_url}}"],
+							"path": ["addresses"]
+						},
+						"description": "First address is auto-set as default. Setting is_default=true unsets all other defaults."
+					}
+				},
+				{
+					"name": "Update Address",
+					"request": {
+						"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{customer_token}}", "type": "string" }] },
+						"method": "PUT",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" },
+							{ "key": "Accept", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"label\": \"Office\",\n  \"line1\": \"456 Ring Road\",\n  \"city\": \"Surat\",\n  \"state\": \"Gujarat\",\n  \"pincode\": \"395001\",\n  \"is_default\": false\n}",
+							"options": { "raw": { "language": "json" } }
+						},
+						"url": {
+							"raw": "{{base_url}}/addresses/{{address_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["addresses", "{{address_id}}"]
+						}
+					}
+				},
+				{
+					"name": "Delete Address",
+					"request": {
+						"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{customer_token}}", "type": "string" }] },
+						"method": "DELETE",
+						"header": [{ "key": "Accept", "value": "application/json" }],
+						"url": {
+							"raw": "{{base_url}}/addresses/{{address_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["addresses", "{{address_id}}"]
+						},
+						"description": "Deleting the default address automatically promotes the next available address."
+					}
+				}
+			]
+		},
+		{
+			"name": "🔔 Customer — Subscriptions",
+			"description": "Meal plan subscription management. Role: CUSTOMER.",
+			"item": [
+				{
+					"name": "List Restaurant Subscription Plans",
+					"request": {
+						"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{customer_token}}", "type": "string" }] },
+						"method": "GET",
+						"header": [{ "key": "Accept", "value": "application/json" }],
+						"url": {
+							"raw": "{{base_url}}/restaurants/{{restaurant_id}}/subscription-plans",
+							"host": ["{{base_url}}"],
+							"path": ["restaurants", "{{restaurant_id}}", "subscription-plans"]
+						}
+					}
+				},
+				{
+					"name": "Get Subscription Plan Details",
+					"request": {
+						"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{customer_token}}", "type": "string" }] },
+						"method": "GET",
+						"header": [{ "key": "Accept", "value": "application/json" }],
+						"url": {
+							"raw": "{{base_url}}/subscription-plans/{{plan_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["subscription-plans", "{{plan_id}}"]
+						}
+					}
+				},
+				{
+					"name": "Subscribe to a Plan",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const res = pm.response.json();",
+									"if (res.success && res.data && res.data.id) {",
+									"    pm.collectionVariables.set('subscription_id', String(res.data.id));",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{customer_token}}", "type": "string" }] },
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" },
+							{ "key": "Accept", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"restaurant_id\": 1,\n  \"subscription_plan_id\": 1,\n  \"start_date\": \"2026-09-01\",\n  \"address_id\": 1,\n  \"auto_renew\": true\n}",
+							"options": { "raw": { "language": "json" } }
 						},
 						"url": {
 							"raw": "{{base_url}}/subscriptions",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"subscriptions"
-							]
+							"host": ["{{base_url}}"],
+							"path": ["subscriptions"]
+						}
+					}
+				},
+				{
+					"name": "List My Subscriptions",
+					"request": {
+						"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{customer_token}}", "type": "string" }] },
+						"method": "GET",
+						"header": [{ "key": "Accept", "value": "application/json" }],
+						"url": {
+							"raw": "{{base_url}}/subscriptions",
+							"host": ["{{base_url}}"],
+							"path": ["subscriptions"]
+						}
+					}
+				},
+				{
+					"name": "Get Subscription Details",
+					"request": {
+						"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{customer_token}}", "type": "string" }] },
+						"method": "GET",
+						"header": [{ "key": "Accept", "value": "application/json" }],
+						"url": {
+							"raw": "{{base_url}}/subscriptions/{{subscription_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["subscriptions", "{{subscription_id}}"]
+						}
+					}
+				},
+				{
+					"name": "Pause Subscription",
+					"request": {
+						"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{customer_token}}", "type": "string" }] },
+						"method": "POST",
+						"header": [{ "key": "Accept", "value": "application/json" }],
+						"url": {
+							"raw": "{{base_url}}/subscriptions/{{subscription_id}}/pause",
+							"host": ["{{base_url}}"],
+							"path": ["subscriptions", "{{subscription_id}}", "pause"]
+						}
+					}
+				},
+				{
+					"name": "Resume Subscription",
+					"request": {
+						"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{customer_token}}", "type": "string" }] },
+						"method": "POST",
+						"header": [{ "key": "Accept", "value": "application/json" }],
+						"url": {
+							"raw": "{{base_url}}/subscriptions/{{subscription_id}}/resume",
+							"host": ["{{base_url}}"],
+							"path": ["subscriptions", "{{subscription_id}}", "resume"]
+						}
+					}
+				},
+				{
+					"name": "Cancel Subscription",
+					"request": {
+						"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{customer_token}}", "type": "string" }] },
+						"method": "POST",
+						"header": [{ "key": "Accept", "value": "application/json" }],
+						"url": {
+							"raw": "{{base_url}}/subscriptions/{{subscription_id}}/cancel",
+							"host": ["{{base_url}}"],
+							"path": ["subscriptions", "{{subscription_id}}", "cancel"]
 						}
 					}
 				}
 			]
 		},
 		{
-			"name": "Restaurant",
+			"name": "🏪 Restaurant — Profile",
+			"description": "Restaurant profile management via API. Role: RESTAURANT + restaurant.isolation.",
 			"item": [
 				{
-					"name": "Get Profile",
+					"name": "Get Restaurant Profile",
 					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{restaurant_token}}",
-									"type": "string"
-								}
-							]
-						},
+						"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{restaurant_token}}", "type": "string" }] },
 						"method": "GET",
-						"header": [
-							{
-								"key": "Accept",
-								"value": "application/json"
-							}
-						],
+						"header": [{ "key": "Accept", "value": "application/json" }],
 						"url": {
 							"raw": "{{base_url}}/restaurant/profile",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"restaurant",
-								"profile"
-							]
+							"host": ["{{base_url}}"],
+							"path": ["restaurant", "profile"]
 						}
 					}
 				},
+				{
+					"name": "Update Restaurant Profile",
+					"request": {
+						"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{restaurant_token}}", "type": "string" }] },
+						"method": "PUT",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" },
+							{ "key": "Accept", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Ghar Ka Khana\",\n  \"phone\": \"9876543210\",\n  \"address\": \"12 Food Street, Surat\",\n  \"description\": \"Authentic home-style tiffin service\",\n  \"opening_time\": \"09:00\",\n  \"closing_time\": \"21:00\"\n}",
+							"options": { "raw": { "language": "json" } }
+						},
+						"url": {
+							"raw": "{{base_url}}/restaurant/profile",
+							"host": ["{{base_url}}"],
+							"path": ["restaurant", "profile"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "📂 Restaurant — Categories",
+			"description": "Menu category management. Role: RESTAURANT.",
+			"item": [
 				{
 					"name": "List Categories",
 					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{restaurant_token}}",
-									"type": "string"
-								}
-							]
-						},
+						"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{restaurant_token}}", "type": "string" }] },
 						"method": "GET",
-						"header": [
-							{
-								"key": "Accept",
-								"value": "application/json"
-							}
-						],
+						"header": [{ "key": "Accept", "value": "application/json" }],
 						"url": {
 							"raw": "{{base_url}}/restaurant/categories",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"restaurant",
-								"categories"
+							"host": ["{{base_url}}"],
+							"path": ["restaurant", "categories"]
+						}
+					}
+				},
+				{
+					"name": "Create Category",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const res = pm.response.json();",
+									"if (res.success && res.data && res.data.id) {",
+									"    pm.collectionVariables.set('category_id', String(res.data.id));",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{restaurant_token}}", "type": "string" }] },
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" },
+							{ "key": "Accept", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Lunch\",\n  \"description\": \"Midday meal options\",\n  \"sort_order\": 1,\n  \"is_active\": true\n}",
+							"options": { "raw": { "language": "json" } }
+						},
+						"url": {
+							"raw": "{{base_url}}/restaurant/categories",
+							"host": ["{{base_url}}"],
+							"path": ["restaurant", "categories"]
+						}
+					}
+				},
+				{
+					"name": "Update Category",
+					"request": {
+						"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{restaurant_token}}", "type": "string" }] },
+						"method": "PUT",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" },
+							{ "key": "Accept", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Dinner\",\n  \"sort_order\": 2,\n  \"is_active\": true\n}",
+							"options": { "raw": { "language": "json" } }
+						},
+						"url": {
+							"raw": "{{base_url}}/restaurant/categories/{{category_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["restaurant", "categories", "{{category_id}}"]
+						}
+					}
+				},
+				{
+					"name": "Delete Category",
+					"request": {
+						"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{restaurant_token}}", "type": "string" }] },
+						"method": "DELETE",
+						"header": [{ "key": "Accept", "value": "application/json" }],
+						"url": {
+							"raw": "{{base_url}}/restaurant/categories/{{category_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["restaurant", "categories", "{{category_id}}"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "🍛 Restaurant — Menu Items",
+			"description": "Menu item management. Role: RESTAURANT.",
+			"item": [
+				{
+					"name": "List Menu Items",
+					"request": {
+						"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{restaurant_token}}", "type": "string" }] },
+						"method": "GET",
+						"header": [{ "key": "Accept", "value": "application/json" }],
+						"url": {
+							"raw": "{{base_url}}/restaurant/menu-items?limit=20",
+							"host": ["{{base_url}}"],
+							"path": ["restaurant", "menu-items"],
+							"query": [
+								{ "key": "category_id", "value": "", "disabled": true, "description": "Filter by category" },
+								{ "key": "search", "value": "", "disabled": true, "description": "Search name or description" },
+								{ "key": "limit", "value": "20" }
 							]
 						}
 					}
 				},
 				{
-					"name": "Add Menu Category",
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{restaurant_token}}",
-									"type": "string"
-								}
-							]
-						},
-						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							},
-							{
-								"key": "Accept",
-								"value": "application/json"
+					"name": "Create Menu Item",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const res = pm.response.json();",
+									"if (res.success && res.data && res.data.id) {",
+									"    pm.collectionVariables.set('menu_item_id', String(res.data.id));",
+									"}"
+								],
+								"type": "text/javascript"
 							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"name\": \"Desserts\",\n  \"description\": \"Sweet treats and puddings\",\n  \"status\": \"ACTIVE\"\n}"
-						},
-						"url": {
-							"raw": "{{base_url}}/restaurant/categories",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"restaurant",
-								"categories"
-							]
 						}
-					}
-				},
-				{
-					"name": "Add MenuItem",
+					],
 					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{restaurant_token}}",
-									"type": "string"
-								}
-							]
-						},
+						"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{restaurant_token}}", "type": "string" }] },
 						"method": "POST",
 						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							},
-							{
-								"key": "Accept",
-								"value": "application/json"
-							}
+							{ "key": "Content-Type", "value": "application/json" },
+							{ "key": "Accept", "value": "application/json" }
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"category_id\": 1,\n  \"name\": \"Basundi\",\n  \"description\": \"Sweet thickened milk flavored with cardamom\",\n  \"price\": 5.50,\n  \"veg_type\": \"VEG\",\n  \"availability\": true,\n  \"status\": \"ACTIVE\"\n}"
+							"raw": "{\n  \"name\": \"Dal Rice\",\n  \"description\": \"Homestyle dal with steamed rice\",\n  \"category_id\": 1,\n  \"price\": 120.00,\n  \"discount_price\": null,\n  \"is_active\": true,\n  \"is_veg\": true,\n  \"sort_order\": 1\n}",
+							"options": { "raw": { "language": "json" } }
 						},
 						"url": {
 							"raw": "{{base_url}}/restaurant/menu-items",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"restaurant",
-								"menu-items"
+							"host": ["{{base_url}}"],
+							"path": ["restaurant", "menu-items"]
+						}
+					}
+				},
+				{
+					"name": "Update Menu Item",
+					"request": {
+						"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{restaurant_token}}", "type": "string" }] },
+						"method": "PUT",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" },
+							{ "key": "Accept", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Dal Rice Special\",\n  \"price\": 130.00,\n  \"is_active\": true\n}",
+							"options": { "raw": { "language": "json" } }
+						},
+						"url": {
+							"raw": "{{base_url}}/restaurant/menu-items/{{menu_item_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["restaurant", "menu-items", "{{menu_item_id}}"]
+						}
+					}
+				},
+				{
+					"name": "Delete Menu Item",
+					"request": {
+						"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{restaurant_token}}", "type": "string" }] },
+						"method": "DELETE",
+						"header": [{ "key": "Accept", "value": "application/json" }],
+						"url": {
+							"raw": "{{base_url}}/restaurant/menu-items/{{menu_item_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["restaurant", "menu-items", "{{menu_item_id}}"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "📋 Restaurant — Subscription Plans",
+			"description": "Meal subscription plan management. Role: RESTAURANT.",
+			"item": [
+				{
+					"name": "List Subscription Plans",
+					"request": {
+						"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{restaurant_token}}", "type": "string" }] },
+						"method": "GET",
+						"header": [{ "key": "Accept", "value": "application/json" }],
+						"url": {
+							"raw": "{{base_url}}/restaurant/subscription-plans",
+							"host": ["{{base_url}}"],
+							"path": ["restaurant", "subscription-plans"]
+						}
+					}
+				},
+				{
+					"name": "Create Subscription Plan",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const res = pm.response.json();",
+									"if (res.success && res.data && res.data.id) {",
+									"    pm.collectionVariables.set('plan_id', String(res.data.id));",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{restaurant_token}}", "type": "string" }] },
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" },
+							{ "key": "Accept", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Monthly Lunch Plan\",\n  \"description\": \"30 days of home-cooked lunch delivered daily\",\n  \"duration_days\": 30,\n  \"price\": 2500.00,\n  \"meals_per_day\": 1,\n  \"is_active\": true\n}",
+							"options": { "raw": { "language": "json" } }
+						},
+						"url": {
+							"raw": "{{base_url}}/restaurant/subscription-plans",
+							"host": ["{{base_url}}"],
+							"path": ["restaurant", "subscription-plans"]
+						}
+					}
+				},
+				{
+					"name": "Update Subscription Plan",
+					"request": {
+						"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{restaurant_token}}", "type": "string" }] },
+						"method": "PUT",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" },
+							{ "key": "Accept", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Monthly Lunch Plan — Updated\",\n  \"price\": 2800.00,\n  \"is_active\": true\n}",
+							"options": { "raw": { "language": "json" } }
+						},
+						"url": {
+							"raw": "{{base_url}}/restaurant/subscription-plans/{{plan_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["restaurant", "subscription-plans", "{{plan_id}}"]
+						}
+					}
+				},
+				{
+					"name": "Delete Subscription Plan",
+					"request": {
+						"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{restaurant_token}}", "type": "string" }] },
+						"method": "DELETE",
+						"header": [{ "key": "Accept", "value": "application/json" }],
+						"url": {
+							"raw": "{{base_url}}/restaurant/subscription-plans/{{plan_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["restaurant", "subscription-plans", "{{plan_id}}"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "🚀 Restaurant — Order Management",
+			"description": "Real-time order management and status progression. Role: RESTAURANT.",
+			"item": [
+				{
+					"name": "List Restaurant Orders",
+					"request": {
+						"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{restaurant_token}}", "type": "string" }] },
+						"method": "GET",
+						"header": [{ "key": "Accept", "value": "application/json" }],
+						"url": {
+							"raw": "{{base_url}}/restaurant/orders?limit=20",
+							"host": ["{{base_url}}"],
+							"path": ["restaurant", "orders"],
+							"query": [
+								{ "key": "status", "value": "", "disabled": true, "description": "PENDING|CONFIRMED|PREPARING|READY|COMPLETED|CANCELLED" },
+								{ "key": "delivery_status", "value": "", "disabled": true, "description": "PENDING|OUT_FOR_DELIVERY|DELIVERED" },
+								{ "key": "search", "value": "", "disabled": true, "description": "Order number, customer name or phone" },
+								{ "key": "from_date", "value": "", "disabled": true },
+								{ "key": "to_date", "value": "", "disabled": true },
+								{ "key": "limit", "value": "20" }
 							]
 						}
 					}
 				},
 				{
-					"name": "List Orders",
+					"name": "Get Order Details",
 					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{restaurant_token}}",
-									"type": "string"
-								}
-							]
-						},
+						"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{restaurant_token}}", "type": "string" }] },
 						"method": "GET",
-						"header": [
-							{
-								"key": "Accept",
-								"value": "application/json"
-							}
-						],
+						"header": [{ "key": "Accept", "value": "application/json" }],
 						"url": {
-							"raw": "{{base_url}}/restaurant/orders?status=confirmed",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"restaurant",
-								"orders"
-							],
-							"query": [
-								{
-									"key": "status",
-									"value": "confirmed"
-								}
-							]
+							"raw": "{{base_url}}/restaurant/orders/{{order_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["restaurant", "orders", "{{order_id}}"]
 						}
 					}
 				},
 				{
 					"name": "Confirm Order",
 					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{restaurant_token}}",
-									"type": "string"
-								}
-							]
-						},
+						"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{restaurant_token}}", "type": "string" }] },
 						"method": "POST",
-						"header": [
-							{
-								"key": "Accept",
-								"value": "application/json"
-							}
-						],
+						"header": [{ "key": "Accept", "value": "application/json" }],
 						"url": {
-							"raw": "{{base_url}}/restaurant/orders/1/confirm",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"restaurant",
-								"orders",
-								"1",
-								"confirm"
-							]
-						}
+							"raw": "{{base_url}}/restaurant/orders/{{order_id}}/confirm",
+							"host": ["{{base_url}}"],
+							"path": ["restaurant", "orders", "{{order_id}}", "confirm"]
+						},
+						"description": "Transitions order to CONFIRMED status."
 					}
 				},
 				{
-					"name": "Mark Preparing",
+					"name": "Mark as Preparing",
 					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{restaurant_token}}",
-									"type": "string"
-								}
-							]
-						},
+						"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{restaurant_token}}", "type": "string" }] },
 						"method": "POST",
-						"header": [
-							{
-								"key": "Accept",
-								"value": "application/json"
-							}
-						],
+						"header": [{ "key": "Accept", "value": "application/json" }],
 						"url": {
-							"raw": "{{base_url}}/restaurant/orders/1/preparing",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"restaurant",
-								"orders",
-								"1",
-								"preparing"
-							]
-						}
+							"raw": "{{base_url}}/restaurant/orders/{{order_id}}/preparing",
+							"host": ["{{base_url}}"],
+							"path": ["restaurant", "orders", "{{order_id}}", "preparing"]
+						},
+						"description": "Transitions order to PREPARING status. Customer receives a push notification."
 					}
 				},
 				{
-					"name": "Mark Ready",
+					"name": "Mark as Ready",
 					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{restaurant_token}}",
-									"type": "string"
-								}
-							]
-						},
+						"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{restaurant_token}}", "type": "string" }] },
 						"method": "POST",
-						"header": [
-							{
-								"key": "Accept",
-								"value": "application/json"
-							}
-						],
+						"header": [{ "key": "Accept", "value": "application/json" }],
 						"url": {
-							"raw": "{{base_url}}/restaurant/orders/1/ready",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"restaurant",
-								"orders",
-								"1",
-								"ready"
-							]
-						}
+							"raw": "{{base_url}}/restaurant/orders/{{order_id}}/ready",
+							"host": ["{{base_url}}"],
+							"path": ["restaurant", "orders", "{{order_id}}", "ready"]
+						},
+						"description": "Transitions order to READY status."
 					}
 				},
 				{
-					"name": "Mark Out For Delivery",
+					"name": "Mark Out for Delivery",
 					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{restaurant_token}}",
-									"type": "string"
-								}
-							]
-						},
+						"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{restaurant_token}}", "type": "string" }] },
 						"method": "POST",
-						"header": [
-							{
-								"key": "Accept",
-								"value": "application/json"
-							}
-						],
+						"header": [{ "key": "Accept", "value": "application/json" }],
 						"url": {
-							"raw": "{{base_url}}/restaurant/orders/1/out-for-delivery",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"restaurant",
-								"orders",
-								"1",
-								"out-for-delivery"
-							]
-						}
+							"raw": "{{base_url}}/restaurant/orders/{{order_id}}/out-for-delivery",
+							"host": ["{{base_url}}"],
+							"path": ["restaurant", "orders", "{{order_id}}", "out-for-delivery"]
+						},
+						"description": "Sets delivery_status to OUT_FOR_DELIVERY and generates a delivery OTP. OTP is returned in the success message."
 					}
 				},
 				{
-					"name": "Mark Delivered (with OTP)",
+					"name": "Mark as Delivered",
 					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{restaurant_token}}",
-									"type": "string"
-								}
-							]
-						},
+						"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{restaurant_token}}", "type": "string" }] },
 						"method": "POST",
 						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							},
-							{
-								"key": "Accept",
-								"value": "application/json"
-							}
+							{ "key": "Content-Type", "value": "application/json" },
+							{ "key": "Accept", "value": "application/json" }
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"delivery_otp\": \"1234\"\n}"
+							"raw": "{\n  \"delivery_otp\": \"4821\"\n}",
+							"options": { "raw": { "language": "json" } }
 						},
 						"url": {
-							"raw": "{{base_url}}/restaurant/orders/1/delivered",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"restaurant",
-								"orders",
-								"1",
-								"delivered"
-							]
-						}
+							"raw": "{{base_url}}/restaurant/orders/{{order_id}}/delivered",
+							"host": ["{{base_url}}"],
+							"path": ["restaurant", "orders", "{{order_id}}", "delivered"]
+						},
+						"description": "Sets delivery_status to DELIVERED. delivery_otp is optional but recommended for verification."
+					}
+				},
+				{
+					"name": "Cancel Order (Restaurant)",
+					"request": {
+						"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{restaurant_token}}", "type": "string" }] },
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" },
+							{ "key": "Accept", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"reason\": \"Ingredient unavailable today\"\n}",
+							"options": { "raw": { "language": "json" } }
+						},
+						"url": {
+							"raw": "{{base_url}}/restaurant/orders/{{order_id}}/cancel",
+							"host": ["{{base_url}}"],
+							"path": ["restaurant", "orders", "{{order_id}}", "cancel"]
+						},
+						"description": "reason is required. Triggers CANCELLED status and customer notification."
 					}
 				}
 			]
 		},
 		{
-			"name": "Payments & Webhooks",
+			"name": "💳 Payments — Worldpay",
+			"description": "Worldpay webhook, simulation (dev/sandbox only) and refunds.",
 			"item": [
 				{
-					"name": "Simulate Payment",
+					"name": "Worldpay Webhook (Public)",
 					"request": {
 						"method": "POST",
 						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							},
-							{
-								"key": "Accept",
-								"value": "application/json"
-							}
+							{ "key": "Content-Type", "value": "application/json" },
+							{ "key": "Accept", "value": "application/json" }
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"order_number\": \"ORD-20260817-123456\",\n  \"status\": \"PAID\"\n}"
-						},
-						"url": {
-							"raw": "{{base_url}}/payments/worldpay/simulate",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"payments",
-								"worldpay",
-								"simulate"
-							]
-						}
-					}
-				},
-				{
-					"name": "Worldpay Webhook",
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							},
-							{
-								"key": "Accept",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"event_id\": \"evt_webhook_9922\",\n  \"transaction_id\": \"tx_worldpay_9922\",\n  \"reference\": \"WP-REF-ORD-20260817-123456\",\n  \"status\": \"PAID\",\n  \"amount\": 30.50,\n  \"response_code\": \"00\",\n  \"signature\": \"mock-signature\"\n}"
+							"raw": "{\n  \"event_id\": \"evt_abc123xyz\",\n  \"transaction_id\": \"tx_xyz789\",\n  \"reference\": \"WP-REF-ORD-20260825-0001\",\n  \"status\": \"PAID\",\n  \"amount\": 240.00,\n  \"response_code\": \"00\",\n  \"signature\": \"worldpay-signature-here\"\n}",
+							"options": { "raw": { "language": "json" } }
 						},
 						"url": {
 							"raw": "{{base_url}}/payments/worldpay/webhook",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"payments",
-								"worldpay",
-								"webhook"
-							]
+							"host": ["{{base_url}}"],
+							"path": ["payments", "worldpay", "webhook"]
+						},
+						"description": "Public endpoint — called by Worldpay after a transaction. No auth required."
+					}
+				},
+				{
+					"name": "Simulate Payment (Dev/Sandbox Only)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" },
+							{ "key": "Accept", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"order_number\": \"{{order_number}}\",\n  \"status\": \"PAID\"\n}",
+							"options": { "raw": { "language": "json" } }
+						},
+						"url": {
+							"raw": "{{base_url}}/payments/worldpay/simulate",
+							"host": ["{{base_url}}"],
+							"path": ["payments", "worldpay", "simulate"]
+						},
+						"description": "⚠️ DEV/SANDBOX ONLY. Simulates a Worldpay PAID or FAILED webhook for a given order_number. Moves the order from PENDING to PAID status."
+					}
+				},
+				{
+					"name": "Refund Order",
+					"request": {
+						"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{restaurant_token}}", "type": "string" }] },
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" },
+							{ "key": "Accept", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"refund_amount\": 240.00,\n  \"reason\": \"Customer cancelled before preparation started\"\n}",
+							"options": { "raw": { "language": "json" } }
+						},
+						"url": {
+							"raw": "{{base_url}}/orders/{{order_id}}/refund",
+							"host": ["{{base_url}}"],
+							"path": ["orders", "{{order_id}}", "refund"]
+						},
+						"description": "Available to SUPER_ADMIN or the RESTAURANT owner of the specific order. Both restaurant_token and a super-admin token are valid here."
+					}
+				}
+			]
+		},
+		{
+			"name": "🔔 Notifications & FCM Devices",
+			"description": "Push notification inbox and FCM device token management. Available to both CUSTOMER and RESTAURANT roles.",
+			"item": [
+				{
+					"name": "Register FCM Token",
+					"request": {
+						"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{customer_token}}", "type": "string" }] },
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" },
+							{ "key": "Accept", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"fcm_token\": \"your-firebase-device-token-here\",\n  \"device_type\": \"android\",\n  \"device_id\": \"unique-device-uuid-001\"\n}",
+							"options": { "raw": { "language": "json" } }
+						},
+						"url": {
+							"raw": "{{base_url}}/notifications/token",
+							"host": ["{{base_url}}"],
+							"path": ["notifications", "token"]
+						},
+						"description": "Register FCM token for push notifications. device_type: android | ios | web | unknown.\nAlso available at: POST /devices/register and POST /device/fcm-token"
+					}
+				},
+				{
+					"name": "Register Device (alias)",
+					"request": {
+						"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{customer_token}}", "type": "string" }] },
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" },
+							{ "key": "Accept", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"fcm_token\": \"your-firebase-device-token-here\",\n  \"device_type\": \"ios\",\n  \"device_id\": \"unique-device-uuid-002\"\n}",
+							"options": { "raw": { "language": "json" } }
+						},
+						"url": {
+							"raw": "{{base_url}}/devices/register",
+							"host": ["{{base_url}}"],
+							"path": ["devices", "register"]
+						},
+						"description": "Alias for POST /notifications/token."
+					}
+				},
+				{
+					"name": "Unregister Device",
+					"request": {
+						"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{customer_token}}", "type": "string" }] },
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" },
+							{ "key": "Accept", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"fcm_token\": \"your-firebase-device-token-here\"\n}",
+							"options": { "raw": { "language": "json" } }
+						},
+						"url": {
+							"raw": "{{base_url}}/devices/unregister",
+							"host": ["{{base_url}}"],
+							"path": ["devices", "unregister"]
+						},
+						"description": "Deactivates the FCM token (e.g., on logout or device switch). Does not delete the record."
+					}
+				},
+				{
+					"name": "Get Notifications",
+					"request": {
+						"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{customer_token}}", "type": "string" }] },
+						"method": "GET",
+						"header": [{ "key": "Accept", "value": "application/json" }],
+						"url": {
+							"raw": "{{base_url}}/notifications?limit=20",
+							"host": ["{{base_url}}"],
+							"path": ["notifications"],
+							"query": [{ "key": "limit", "value": "20" }]
+						},
+						"description": "Paginated list of notifications for the authenticated user, newest first."
+					}
+				},
+				{
+					"name": "Get Unread Count",
+					"request": {
+						"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{customer_token}}", "type": "string" }] },
+						"method": "GET",
+						"header": [{ "key": "Accept", "value": "application/json" }],
+						"url": {
+							"raw": "{{base_url}}/notifications/unread-count",
+							"host": ["{{base_url}}"],
+							"path": ["notifications", "unread-count"]
+						},
+						"description": "Returns { unread_count: N }."
+					}
+				},
+				{
+					"name": "Mark Notification as Read (by body)",
+					"request": {
+						"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{customer_token}}", "type": "string" }] },
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" },
+							{ "key": "Accept", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"notification_id\": 1\n}",
+							"options": { "raw": { "language": "json" } }
+						},
+						"url": {
+							"raw": "{{base_url}}/notifications/read",
+							"host": ["{{base_url}}"],
+							"path": ["notifications", "read"]
 						}
 					}
 				},
 				{
-					"name": "Process Refund",
+					"name": "Mark Notification as Read (by URL param)",
 					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{admin_token}}",
-									"type": "string"
-								}
-							]
-						},
+						"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{customer_token}}", "type": "string" }] },
 						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							},
-							{
-								"key": "Accept",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"refund_amount\": 15.00,\n  \"reason\": \"Item unavailable in kitchen\"\n}"
-						},
+						"header": [{ "key": "Accept", "value": "application/json" }],
 						"url": {
-							"raw": "{{base_url}}/orders/1/refund",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"orders",
-								"1",
-								"refund"
-							]
+							"raw": "{{base_url}}/notifications/{{notification_id}}/read",
+							"host": ["{{base_url}}"],
+							"path": ["notifications", "{{notification_id}}", "read"]
+						}
+					}
+				},
+				{
+					"name": "Mark All Notifications as Read",
+					"request": {
+						"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{customer_token}}", "type": "string" }] },
+						"method": "POST",
+						"header": [{ "key": "Accept", "value": "application/json" }],
+						"url": {
+							"raw": "{{base_url}}/notifications/read-all",
+							"host": ["{{base_url}}"],
+							"path": ["notifications", "read-all"]
 						}
 					}
 				}
 			]
-		}
-	],
-	"event": [
-		{
-			"listen": "prerequest",
-			"script": {
-				"type": "text/javascript",
-				"exec": [
-					""
-				]
-			}
-		},
-		{
-			"listen": "test",
-			"script": {
-				"type": "text/javascript",
-				"exec": [
-					""
-				]
-			}
-		}
-	],
-	"variable": [
-		{
-			"key": "base_url",
-			"value": "http://localhost:8000/api/v1",
-			"type": "string"
-		},
-		{
-			"key": "customer_token",
-			"value": "mock-uid-customer",
-			"type": "string"
-		},
-		{
-			"key": "restaurant_token",
-			"value": "mock-uid-restaurant",
-			"type": "string"
-		},
-		{
-			"key": "admin_token",
-			"value": "mock-uid-admin",
-			"type": "string"
 		}
 	]
 }
