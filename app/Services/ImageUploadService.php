@@ -47,7 +47,7 @@ class ImageUploadService
                 throw new Exception('Failed to store uploaded file.');
             }
 
-            return url(Storage::url($path));
+            return $this->formatUrl($path);
         }
 
         // 2. Handle Base64 Image String
@@ -91,7 +91,7 @@ class ImageUploadService
                     throw new Exception('Failed to store decoded base64 image.');
                 }
 
-                return url(Storage::url($path));
+                return $this->formatUrl($path);
             } catch (Exception $e) {
                 Log::error('Base64 upload exception: ' . $e->getMessage());
                 throw $e;
@@ -172,5 +172,29 @@ class ImageUploadService
             return base64_encode(base64_decode($string, true)) === $string;
         }
         return false;
+    }
+
+    /**
+     * Format a clean, consistent public URL for a stored image path.
+     * Ensures images always use APP_URL or server host without MAMP subfolder clutter.
+     */
+    public function formatUrl(string $path): string
+    {
+        // Extract relative storage path if string contains full URL / MAMP paths
+        if (str_contains($path, '/storage/')) {
+            $storageSegment = '/storage/';
+            $relativePath = substr($path, strpos($path, $storageSegment) + strlen($storageSegment));
+        } else {
+            $relativePath = ltrim($path, '/');
+        }
+
+        $appUrl = config('app.url');
+        if (empty($appUrl) || $appUrl === 'http://localhost') {
+            $baseUrl = 'http://192.168.1.231:8000';
+        } else {
+            $baseUrl = $appUrl;
+        }
+
+        return rtrim($baseUrl, '/') . '/storage/' . ltrim($relativePath, '/');
     }
 }

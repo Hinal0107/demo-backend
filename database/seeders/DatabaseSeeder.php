@@ -53,11 +53,13 @@ class DatabaseSeeder extends Seeder
         ]);
 
         // 2. Create Restaurant
+        $baseUrl = rtrim(config('app.url', 'http://192.168.1.231:8000'), '/');
+
         $restaurant = Restaurant::create([
             'name' => 'Royal Tiffin Service',
             'email' => 'royal@tiffin.com',
             'phone' => '+447111222333',
-            'logo' => 'https://domain.com/storage/restaurants/royal_tiffin.png',
+            'logo' => $baseUrl . '/storage/restaurants/royal_tiffin.png',
             'description' => 'Gourmet daily lunch and dinner tiffin deliveries.',
             'address' => '100 Food Plaza, High Street',
             'city' => 'London',
@@ -91,7 +93,7 @@ class DatabaseSeeder extends Seeder
             'restaurant_id' => $restaurant->id,
             'name' => 'Gujarati Thali',
             'description' => 'Authentic Gujarati daily meal boxes.',
-            'image' => 'https://domain.com/storage/menu-categories/gujarati.png',
+            'image' => $baseUrl . '/storage/menu-categories/gujarati.png',
             'sort_order' => 1,
             'status' => 'ACTIVE',
         ]);
@@ -100,7 +102,7 @@ class DatabaseSeeder extends Seeder
             'restaurant_id' => $restaurant->id,
             'name' => 'Punjabi Thali',
             'description' => 'Rich and savory North Indian meals.',
-            'image' => 'https://domain.com/storage/menu-categories/punjabi.png',
+            'image' => $baseUrl . '/storage/menu-categories/punjabi.png',
             'sort_order' => 2,
             'status' => 'ACTIVE',
         ]);
@@ -111,7 +113,7 @@ class DatabaseSeeder extends Seeder
             'category_id' => $gujarati->id,
             'name' => 'Khaman Dhokla',
             'description' => 'Steamed savory gram flour cakes.',
-            'image' => 'https://domain.com/storage/menu-items/dhokla.png',
+            'image' => $baseUrl . '/storage/menu-items/dhokla.png',
             'price' => 4.99,
             'discount_price' => 3.99,
             'veg_type' => 'VEG',
@@ -125,7 +127,7 @@ class DatabaseSeeder extends Seeder
             'category_id' => $gujarati->id,
             'name' => 'Premium Gujarati Thali',
             'description' => 'Includes 2 Shaak, 4 Rotli, Dal, Rice, Sweet and Farsan.',
-            'image' => 'https://domain.com/storage/menu-items/gujthali.png',
+            'image' => $baseUrl . '/storage/menu-items/gujthali.png',
             'price' => 12.50,
             'discount_price' => 10.99,
             'veg_type' => 'VEG',
@@ -139,7 +141,7 @@ class DatabaseSeeder extends Seeder
             'category_id' => $punjabi->id,
             'name' => 'Paneer Butter Masala Thali',
             'description' => 'Rich cottage cheese curry with 3 butter rotis, pulao and salad.',
-            'image' => 'https://domain.com/storage/menu-items/paneer.png',
+            'image' => $baseUrl . '/storage/menu-items/paneer.png',
             'price' => 13.99,
             'discount_price' => 12.50,
             'veg_type' => 'VEG',

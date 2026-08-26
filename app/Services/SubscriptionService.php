@@ -94,31 +94,42 @@ class SubscriptionService
                 throw new Exception('Start date cannot be in the past.', 422);
             }
 
-            // Calculate end date based on plan duration
-            $endDate = clone $startDate;
-            $durationVal = $plan->duration_value;
-            switch ($plan->duration_type) {
-                case 'DAY':
-                    $endDate->addDays($durationVal);
-                    break;
+            // Calculate total meals and max validity days based on plan duration
+            $totalMeals = $plan->total_meals ?: ($plan->duration_type === 'WEEK' ? 7 : ($plan->duration_type === 'MONTH' ? 30 : 7));
+            $maxValidityDays = 14; // Default weekly 14 days max
+
+            switch (strtoupper($plan->duration_type)) {
                 case 'WEEK':
-                    $endDate->addWeeks($durationVal);
+                    $maxValidityDays = 14; // Maximum 14 days for weekly plan
                     break;
                 case 'MONTH':
-                    $endDate->addMonths($durationVal);
+                    $maxValidityDays = 60; // Maximum 60 days for monthly plan
+                    break;
+                case 'DAY':
+                    $maxValidityDays = max(2, $plan->duration_value * 2);
                     break;
                 case 'CUSTOM':
                 default:
-                    // default to 30 days if custom is undefined
-                    $endDate->addDays($plan->total_meals ?: 30);
+                    $maxValidityDays = max(30, $totalMeals * 2);
                     break;
             }
 
-            // Create subscription
+            $endDate = clone $startDate;
+            $endDate->addDays($plan->duration_type === 'WEEK' ? 7 * $plan->duration_value : ($plan->duration_type === 'MONTH' ? 30 * $plan->duration_value : $plan->duration_value));
+
+            $maxValidityDate = clone $startDate;
+            $maxValidityDate->addDays($maxValidityDays);
+
+            // Create subscription with full meal tracking and validity bounds
             $subscription = Subscription::create([
                 'restaurant_id' => $plan->restaurant_id,
                 'customer_id' => $customerId,
                 'subscription_plan_id' => $plan->id,
+                'total_meals' => $totalMeals,
+                'used_meals' => 0,
+                'remaining_meals' => $totalMeals,
+                'max_validity_days' => $maxValidityDays,
+                'max_validity_date' => $maxValidityDate->toDateString(),
                 'start_date' => $startDate->toDateString(),
                 'end_date' => $endDate->toDateString(),
                 'price' => $plan->price,
@@ -141,6 +152,83 @@ class SubscriptionService
 
             return $subscription;
         });
+    }
+
+    /**
+     * Check if a user has access to view/order meals (via initial Free Trial or Active Subscription).
+     */
+    public function checkUserAccessToMeals(\App\Models\User $user): array
+    {
+        // 1. Auto-expire any outdated subscriptions first
+        $this->expireOutdatedSubscriptions($user->id);
+
+        $freeTrialDays = 7; // Configurable initial free trial period (days)
+        $registrationDate = $user->created_at ?? Carbon::now();
+        $daysSinceRegistration = (int)Carbon::today()->diffInDays($registrationDate->startOfDay());
+
+        $isInTrial = $daysSinceRegistration < $freeTrialDays;
+        $trialDaysLeft = max(0, $freeTrialDays - $daysSinceRegistration);
+
+        // 2. Check for active subscription
+        $activeSubscription = Subscription::where('customer_id', $user->id)
+            ->where('status', 'ACTIVE')
+            ->where('payment_status', 'PAID')
+            ->where('remaining_meals', '>', 0)
+            ->where('start_date', '<=', Carbon::today()->toDateString())
+            ->where('max_validity_date', '>=', Carbon::today()->toDateString())
+            ->orderBy('id', 'desc')
+            ->first();
+
+        if ($isInTrial) {
+            return [
+                'can_access' => true,
+                'is_trial' => true,
+                'trial_days_remaining' => $trialDaysLeft,
+                'message' => "You are currently in your initial {$freeTrialDays}-day free trial.",
+                'subscription' => $activeSubscription ? new \App\Http\Resources\SubscriptionResource($activeSubscription) : null,
+            ];
+        }
+
+        if ($activeSubscription) {
+            return [
+                'can_access' => true,
+                'is_trial' => false,
+                'trial_days_remaining' => 0,
+                'message' => 'Active subscription plan found.',
+                'subscription' => new \App\Http\Resources\SubscriptionResource($activeSubscription),
+            ];
+        }
+
+        return [
+            'can_access' => false,
+            'is_trial' => false,
+            'trial_days_remaining' => 0,
+            'message' => 'Your initial free trial period has expired. Please purchase a subscription plan to access protected meal details.',
+            'subscription' => null,
+        ];
+    }
+
+    /**
+     * Check and expire active subscriptions that passed max validity date or exhausted meals.
+     */
+    public function expireOutdatedSubscriptions(?int $customerId = null): int
+    {
+        $query = Subscription::where('status', 'ACTIVE');
+
+        if ($customerId) {
+            $query->where('customer_id', $customerId);
+        }
+
+        $subscriptions = $query->get();
+        $expiredCount = 0;
+
+        foreach ($subscriptions as $sub) {
+            if ($sub->checkAndAutoExpire()) {
+                $expiredCount++;
+            }
+        }
+
+        return $expiredCount;
     }
 
     public function pauseSubscription(Subscription $subscription): Subscription
@@ -223,6 +311,12 @@ class SubscriptionService
                 continue;
             }
 
+            // Skip if remaining_meals <= 0 or past max_validity_date
+            if ($sub->remaining_meals <= 0 || ($sub->max_validity_date && $targetDate->isAfter($sub->max_validity_date))) {
+                $sub->checkAndAutoExpire();
+                continue;
+            }
+
             // Run database transaction to generate order
             DB::transaction(function () use ($sub, $plan, $dateStr, &$generatedCount) {
                 // Get customer's default address or first address
@@ -277,6 +371,14 @@ class SubscriptionService
                     'order_status' => 'CONFIRMED',
                     'delivery_status' => 'PENDING',
                 ]);
+
+                // Update subscription meal counts
+                $sub->used_meals += 1;
+                $sub->remaining_meals = max(0, $sub->total_meals - $sub->used_meals);
+                if ($sub->remaining_meals <= 0) {
+                    $sub->status = 'COMPLETED';
+                }
+                $sub->save();
 
                 $generatedCount++;
             });

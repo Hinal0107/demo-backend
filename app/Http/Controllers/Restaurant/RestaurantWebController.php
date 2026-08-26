@@ -15,6 +15,7 @@ use App\Models\Tax;
 use App\Models\SubscriptionPlan;
 use App\Services\NotificationService;
 use App\Services\SubscriptionService;
+use App\Services\ImageUploadService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -24,11 +25,16 @@ class RestaurantWebController extends Controller
 {
     protected NotificationService $notificationService;
     protected SubscriptionService $subscriptionService;
+    protected ImageUploadService $imageService;
 
-    public function __construct(NotificationService $notificationService, SubscriptionService $subscriptionService)
-    {
+    public function __construct(
+        NotificationService $notificationService,
+        SubscriptionService $subscriptionService,
+        ImageUploadService $imageService
+    ) {
         $this->notificationService = $notificationService;
         $this->subscriptionService = $subscriptionService;
+        $this->imageService = $imageService;
     }
 
     /**
@@ -137,8 +143,10 @@ class RestaurantWebController extends Controller
         ]);
 
         if ($request->hasFile('logo')) {
-            $path = $request->file('logo')->store('restaurants', 'public');
-            $data['logo'] = asset('storage/' . $path);
+            if ($restaurant->logo) {
+                $this->imageService->delete($restaurant->logo);
+            }
+            $data['logo'] = $this->imageService->upload($request->file('logo'), 'restaurants');
         }
 
         $restaurant->update($data);
@@ -171,8 +179,7 @@ class RestaurantWebController extends Controller
         ]);
 
         if ($request->hasFile('image')) {
-            $path = $request->file('image')->store('menu-categories', 'public');
-            $data['image'] = asset('storage/' . $path);
+            $data['image'] = $this->imageService->upload($request->file('image'), 'menu-categories');
         }
 
         $restaurant->menuCategories()->create($data + ['status' => 'ACTIVE']);
@@ -197,8 +204,10 @@ class RestaurantWebController extends Controller
         ]);
 
         if ($request->hasFile('image')) {
-            $path = $request->file('image')->store('menu-categories', 'public');
-            $data['image'] = asset('storage/' . $path);
+            if ($category->image) {
+                $this->imageService->delete($category->image);
+            }
+            $data['image'] = $this->imageService->upload($request->file('image'), 'menu-categories');
         }
 
         $category->update($data);
@@ -254,8 +263,7 @@ class RestaurantWebController extends Controller
         ]);
 
         if ($request->hasFile('image')) {
-            $path = $request->file('image')->store('menu-items', 'public');
-            $data['image'] = asset('storage/' . $path);
+            $data['image'] = $this->imageService->upload($request->file('image'), 'menu-items');
         }
 
         $restaurant->menuItems()->create($data + ['status' => 'ACTIVE']);
@@ -285,8 +293,10 @@ class RestaurantWebController extends Controller
         ]);
 
         if ($request->hasFile('image')) {
-            $path = $request->file('image')->store('menu-items', 'public');
-            $data['image'] = asset('storage/' . $path);
+            if ($menuItem->image) {
+                $this->imageService->delete($menuItem->image);
+            }
+            $data['image'] = $this->imageService->upload($request->file('image'), 'menu-items');
         }
 
         $menuItem->update($data);
@@ -425,8 +435,7 @@ class RestaurantWebController extends Controller
         ]);
 
         if ($request->hasFile('image')) {
-            $path = $request->file('image')->store('daily-meals', 'public');
-            $data['image'] = asset('storage/' . $path);
+            $data['image'] = $this->imageService->upload($request->file('image'), 'daily-meals');
         }
 
         if (!isset($data['addons'])) {
@@ -459,8 +468,10 @@ class RestaurantWebController extends Controller
         ]);
 
         if ($request->hasFile('image')) {
-            $path = $request->file('image')->store('daily-meals', 'public');
-            $data['image'] = asset('storage/' . $path);
+            if ($meal->image) {
+                $this->imageService->delete($meal->image);
+            }
+            $data['image'] = $this->imageService->upload($request->file('image'), 'daily-meals');
         }
 
         if (!isset($data['addons'])) {
@@ -503,8 +514,7 @@ class RestaurantWebController extends Controller
         ]);
 
         if ($request->hasFile('image')) {
-            $path = $request->file('image')->store('addons', 'public');
-            $data['image'] = asset('storage/' . $path);
+            $data['image'] = $this->imageService->upload($request->file('image'), 'addons');
         }
 
         $restaurant->addons()->create($data + ['status' => 'ACTIVE']);
@@ -527,8 +537,10 @@ class RestaurantWebController extends Controller
         ]);
 
         if ($request->hasFile('image')) {
-            $path = $request->file('image')->store('addons', 'public');
-            $data['image'] = asset('storage/' . $path);
+            if ($addon->image) {
+                $this->imageService->delete($addon->image);
+            }
+            $data['image'] = $this->imageService->upload($request->file('image'), 'addons');
         }
 
         $addon->update($data);

@@ -85,10 +85,23 @@ class CustomerSubscriptionController extends Controller
     }
 
     /**
+     * GET /subscriptions/access-status
+     */
+    public function accessStatus(Request $request): JsonResponse
+    {
+        $status = $this->subscriptionService->checkUserAccessToMeals($request->user());
+
+        return $this->successResponse($status, 'Subscription access status fetched successfully.');
+    }
+
+    /**
      * GET /subscriptions
      */
     public function index(Request $request): JsonResponse
     {
+        // Auto-expire outdated subscriptions first
+        $this->subscriptionService->expireOutdatedSubscriptions($request->user()->id);
+
         $subscriptions = Subscription::with(['restaurant', 'plan'])
             ->where('customer_id', $request->user()->id)
             ->get();

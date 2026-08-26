@@ -14,14 +14,19 @@ use App\Http\Controllers\Customer\CustomerTaxController;
 use App\Http\Controllers\Restaurant\RestaurantProfileController;
 use App\Http\Controllers\Restaurant\RestaurantCategoryController;
 use App\Http\Controllers\Restaurant\RestaurantMenuItemController;
+use App\Http\Controllers\Restaurant\RestaurantDailyMealController;
 use App\Http\Controllers\Restaurant\RestaurantSubscriptionPlanController;
 use App\Http\Controllers\Restaurant\RestaurantOrderController;
 use App\Http\Controllers\Payments\WorldpayController;
 use App\Http\Controllers\FCM\FcmTokenController;
 use App\Http\Controllers\Notification\NotificationController;
+use App\Http\Controllers\TermsAndConditionsController;
+use App\Http\Middleware\CheckSubscriptionOrTrial;
 
 Route::prefix('v1')->group(function () {
     
+    // 0. Public Terms & Conditions
+    Route::get('/terms-and-conditions', [TermsAndConditionsController::class, 'index']);
     
     // 1. Guest Authentication Routes
     Route::post('/auth/register', [AuthController::class, 'register']);
@@ -46,14 +51,18 @@ Route::prefix('v1')->group(function () {
             Route::get('/restaurants', [CustomerRestaurantController::class, 'index']);
             Route::get('/restaurants/{restaurantId}', [CustomerRestaurantController::class, 'show']);
 
-            // Menu Discovery
+            // Protected Meal Access (Requires Free Trial or Active Subscription)
+            Route::middleware(CheckSubscriptionOrTrial::class)->group(function () {
+                Route::get('/restaurants/{restaurantId}/today-meal', [CustomerDailyMealController::class, 'todayMeal']);
+                Route::get('/restaurants/{restaurantId}/tomorrow-meal', [CustomerDailyMealController::class, 'tomorrowMeal']);
+                Route::get('/restaurants/{restaurantId}/weekly-meal', [CustomerDailyMealController::class, 'weeklyMeal']);
+                Route::get('/restaurants/{restaurantId}/daily-meals', [CustomerDailyMealController::class, 'index']);
+            });
+
+            // Menu & Addon Discovery
             Route::get('/restaurants/{restaurantId}/categories', [CustomerMenuController::class, 'categories']);
             Route::get('/restaurants/{restaurantId}/menu', [CustomerMenuController::class, 'menu']);
             Route::get('/menu-items/{id}', [CustomerMenuController::class, 'showItem']);
-            Route::get('/restaurants/{restaurantId}/today-meal', [CustomerDailyMealController::class, 'todayMeal']);
-            Route::get('/restaurants/{restaurantId}/tomorrow-meal', [CustomerDailyMealController::class, 'tomorrowMeal']);
-            Route::get('/restaurants/{restaurantId}/weekly-meal', [CustomerDailyMealController::class, 'weeklyMeal']);
-            Route::get('/restaurants/{restaurantId}/daily-meals', [CustomerDailyMealController::class, 'index']);
             Route::get('/restaurants/{restaurantId}/addons', [CustomerAddonController::class, 'index']);
             Route::get('/restaurants/{restaurantId}/taxes', [CustomerTaxController::class, 'index']);
 
@@ -61,6 +70,7 @@ Route::prefix('v1')->group(function () {
             Route::apiResource('/addresses', AddressController::class);
 
             // Plan Discoveries & Subscriptions
+            Route::get('/subscriptions/access-status', [CustomerSubscriptionController::class, 'accessStatus']);
             Route::get('/restaurants/{restaurantId}/subscription-plans', [CustomerSubscriptionController::class, 'plans']);
             Route::get('/subscription-plans/{id}', [CustomerSubscriptionController::class, 'showPlan']);
             Route::post('/subscriptions', [CustomerSubscriptionController::class, 'subscribe']);
@@ -98,6 +108,13 @@ Route::prefix('v1')->group(function () {
             Route::put('/restaurant/categories/{id}', [RestaurantCategoryController::class, 'update']);
             Route::delete('/restaurant/categories/{id}', [RestaurantCategoryController::class, 'destroy']);
 
+            
+            // Daily Meals Management
+            Route::get('/restaurant/daily-meals', [RestaurantDailyMealController::class, 'index']);
+            Route::post('/restaurant/daily-meals', [RestaurantDailyMealController::class, 'store']);
+            Route::put('/restaurant/daily-meals/{id}', [RestaurantDailyMealController::class, 'update']);
+            Route::post('/restaurant/daily-meals/{id}', [RestaurantDailyMealController::class, 'update']);
+            Route::delete('/restaurant/daily-meals/{id}', [RestaurantDailyMealController::class, 'destroy']);
             // Menu Items Management
             Route::get('/restaurant/menu-items', [RestaurantMenuItemController::class, 'index']);
             Route::post('/restaurant/menu-items', [RestaurantMenuItemController::class, 'store']);

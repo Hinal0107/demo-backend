@@ -40,7 +40,7 @@
                         <tr>
                             <td>
                                 @if($item->image)
-                                    <img src="{{ $item->image }}" alt="Dish Image" style="width: 50px; height: 50px; object-fit: cover; border-radius: 6px;">
+                                    <img src="{{ app(\App\Services\ImageUploadService::class)->formatUrl($item->image) }}" alt="Dish Image" style="width: 50px; height: 50px; object-fit: cover; border-radius: 6px;">
                                 @else
                                     <div style="width: 50px; height: 50px; border-radius: 6px; background-color: rgba(0,0,0,0.05); display: flex; align-items: center; justify-content: center; font-size: 10px; color: var(--text-secondary);">No Image</div>
                                 @endif

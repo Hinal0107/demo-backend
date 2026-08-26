@@ -25,11 +25,15 @@ class SendSubscriptionExpiryReminders extends Command
     /**
      * Execute the console command.
      */
-    public function handle(): int
+    public function handle(\App\Services\SubscriptionService $subscriptionService): int
     {
+        $this->info("Running auto-expiration check for outdated subscriptions...");
+        $expired = $subscriptionService->expireOutdatedSubscriptions();
+        $this->info("Auto-expired {$expired} outdated/exhausted subscriptions.");
+
         $this->info("Checking subscriptions expiring soon...");
 
-        $targets = [7, 3, 1];
+        $targets = [7, 3, 2, 1];
         $notifiedCount = 0;
 
         foreach ($targets as $days) {
@@ -37,7 +41,12 @@ class SendSubscriptionExpiryReminders extends Command
 
             $expiringSubscriptions = Subscription::where('status', 'ACTIVE')
                 ->where('payment_status', 'PAID')
-                ->where('end_date', $targetDate)
+                ->where(function ($q) use ($targetDate) {
+                    $q->whereDate('max_validity_date', $targetDate)
+                      ->orWhere(function ($q2) use ($targetDate) {
+                          $q2->whereNull('max_validity_date')->whereDate('end_date', $targetDate);
+                      });
+                })
                 ->get();
 
             foreach ($expiringSubscriptions as $sub) {

@@ -10,9 +10,13 @@ use App\Http\Controllers\Admin\AdminSubscriptionController;
 use App\Http\Controllers\Payments\WorldpayController;
 use App\Http\Controllers\Restaurant\RestaurantWebController;
 
+use App\Http\Controllers\TermsAndConditionsController;
+
 Route::get('/', function () {
     return redirect()->route('admin.login');
 });
+
+Route::get('/terms', [TermsAndConditionsController::class, 'showWeb'])->name('terms');
 
 // Admin Authentication Guest Routes
 Route::get('/admin/login', [AdminDashboardController::class, 'showLogin'])->name('admin.login');

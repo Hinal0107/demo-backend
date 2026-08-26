@@ -20,7 +20,7 @@
         <div style="display: flex; align-items: center; gap: 25px; margin-bottom: 25px;">
             <div style="width: 100px; height: 100px; border-radius: 50%; overflow: hidden; border: 2px solid var(--border-color); background: #eee; display: flex; align-items: center; justify-content: center;">
                 @if($restaurant->logo)
-                    <img src="{{ $restaurant->logo }}" alt="Logo" style="width: 100%; height: 100%; object-fit: cover;">
+                    <img src="{{ app(\App\Services\ImageUploadService::class)->formatUrl($restaurant->logo) }}" alt="Logo" style="width: 100%; height: 100%; object-fit: cover;">
                 @else
                     <span style="font-size: 12px; color: var(--text-secondary);">No Logo</span>
                 @endif

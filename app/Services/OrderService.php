@@ -43,11 +43,53 @@ class OrderService
                 throw new Exception('Selected address does not exist or does not belong to the customer.', 422);
             }
 
-            // 3. Calculate Totals
+            // 3. Subscription Meal Processing & Calculate Totals
             $subtotal = 0.00;
             $itemsToCreate = [];
+            $subscriptionObj = null;
 
-            foreach ($data['items'] as $itemData) {
+            if (!empty($data['subscription_id']) || !empty($data['include_subscription_meal'])) {
+                $subQuery = \App\Models\Subscription::where('customer_id', $customerId)
+                    ->where('restaurant_id', $restaurantId)
+                    ->where('status', 'ACTIVE')
+                    ->where('remaining_meals', '>', 0);
+
+                if (!empty($data['subscription_id'])) {
+                    $subQuery->where('id', $data['subscription_id']);
+                }
+
+                $subscriptionObj = $subQuery->orderBy('id', 'desc')->first();
+
+                if (!$subscriptionObj) {
+                    throw new Exception('No active subscription with remaining meals found for this restaurant.', 422);
+                }
+
+                if ($subscriptionObj->checkAndAutoExpire()) {
+                    throw new Exception('Your subscription plan has expired.', 422);
+                }
+
+                // Add subscription meal at 0.00 cost (covered under subscription)
+                $itemsToCreate[] = [
+                    'menu_item_id' => null,
+                    'addon_id' => null,
+                    'item_name' => 'Subscription Meal - ' . ($subscriptionObj->plan->name ?? 'Daily Plan'),
+                    'quantity' => 1,
+                    'unit_price' => 0.00,
+                    'total_price' => 0.00,
+                ];
+
+                // Deduct 1 meal from subscription
+                $subscriptionObj->used_meals += 1;
+                $subscriptionObj->remaining_meals = max(0, $subscriptionObj->total_meals - $subscriptionObj->used_meals);
+                if ($subscriptionObj->remaining_meals <= 0) {
+                    $subscriptionObj->status = 'COMPLETED';
+                }
+                $subscriptionObj->save();
+            }
+
+            // Process optional cart items (Add-ons or Menu items)
+            $inputItems = $data['items'] ?? [];
+            foreach ($inputItems as $itemData) {
                 if (isset($itemData['addon_id'])) {
                     $addon = \App\Models\Addon::active()->findOrFail($itemData['addon_id']);
 
@@ -72,7 +114,7 @@ class OrderService
                         'unit_price' => $price,
                         'total_price' => $totalPrice,
                     ];
-                } else {
+                } elseif (isset($itemData['menu_item_id'])) {
                     $menuItem = MenuItem::active()->findOrFail($itemData['menu_item_id']);
 
                     if ((int)$menuItem->restaurant_id !== (int)$restaurantId) {
@@ -100,39 +142,63 @@ class OrderService
             }
 
             if (empty($itemsToCreate)) {
-                throw new Exception('Order must contain at least one item.', 422);
+                throw new Exception('Order must contain at least one subscription meal or item.', 422);
             }
 
-            // Dynamic Tax calculation
-            $hasTaxes = \App\Models\Tax::where('restaurant_id', $restaurantId)->exists();
-            if ($hasTaxes) {
-                $taxRateSum = \App\Models\Tax::where('restaurant_id', $restaurantId)->where('status', 'ACTIVE')->sum('rate');
+            // Financial Calculations: Subscription meals are prepaid (0.00). Add-ons require separate payment.
+            if ($subtotal > 0.00) {
+                // Customer has paid add-ons or extra items
+                $hasTaxes = \App\Models\Tax::where('restaurant_id', $restaurantId)->exists();
+                if ($hasTaxes) {
+                    $taxRateSum = \App\Models\Tax::where('restaurant_id', $restaurantId)->where('status', 'ACTIVE')->sum('rate');
+                } else {
+                    $taxRateSum = 10.00; // 10% flat tax fallback
+                }
+                $tax = round($subtotal * ($taxRateSum / 100), 2);
+                $deliveryFee = 3.50; // flat delivery fee for add-on orders
+                $discount = 0.00;
+                $totalAmount = $subtotal + $tax + $deliveryFee - $discount;
+                $paymentStatus = 'PENDING_PAYMENT';
+                $orderStatus = 'PENDING_PAYMENT';
             } else {
-                $taxRateSum = 10.00; // 10% flat tax fallback
+                // Prepaid subscription meal only
+                $tax = 0.00;
+                $deliveryFee = 0.00;
+                $discount = 0.00;
+                $totalAmount = 0.00;
+                $paymentStatus = 'PAID';
+                $orderStatus = 'CONFIRMED';
             }
-            $tax = round($subtotal * ($taxRateSum / 100), 2);
-            $deliveryFee = 3.50; // flat delivery fee
-            $discount = 0.00; // placeholder for promo codes
-            $totalAmount = $subtotal + $tax + $deliveryFee - $discount;
 
             $orderNumber = 'ORD-' . date('Ymd') . '-' . rand(100000, 999999);
+
+            $notesText = $data['notes'] ?? '';
+            if ($subscriptionObj) {
+                $subNote = "Subscription Meal (Covered under Plan #{$subscriptionObj->id}).";
+                if ($subtotal > 0) {
+                    $subNote .= " Separate payment of £" . number_format($totalAmount, 2) . " required for add-ons.";
+                }
+                $notesText = trim($subNote . ' ' . $notesText);
+            }
 
             // 4. Create Order
             $order = Order::create([
                 'order_number' => $orderNumber,
                 'restaurant_id' => $restaurantId,
                 'customer_id' => $customerId,
+                'subscription_id' => $subscriptionObj?->id,
                 'address_id' => $address->id,
                 'subtotal' => $subtotal,
                 'discount' => $discount,
                 'delivery_fee' => $deliveryFee,
                 'tax' => $tax,
                 'total_amount' => $totalAmount,
-                'payment_status' => 'PENDING_PAYMENT',
-                'order_status' => 'PENDING_PAYMENT',
+                'payment_status' => $paymentStatus,
+                'order_status' => $orderStatus,
                 'delivery_status' => 'PENDING',
                 'scheduled_date' => $data['scheduled_date'] ?? null,
-                'notes' => $data['notes'] ?? null,
+                'notes' => $notesText ?: null,
+                'confirmed_at' => $orderStatus === 'CONFIRMED' ? now() : null,
             ]);
 
             // 5. Create Order Items (immutable snapshot data)

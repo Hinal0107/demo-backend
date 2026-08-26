@@ -104,19 +104,21 @@ class AuthService
             UserDevice::where('fcm_token', $data['fcm_token'])->delete();
         }
 
-        // Associate FCM Token
-        UserDevice::updateOrCreate(
-            [
-                'user_id' => $user->id,
-                'device_id' => $data['device_id'],
-            ],
-            [
-                'fcm_token' => $data['fcm_token'],
-                'device_type' => $data['device_type'],
-                'is_active' => true,
-                'last_login_at' => now(),
-            ]
-        );
+        // Associate FCM Token if device details provided
+        if (!empty($data['device_id'])) {
+            UserDevice::updateOrCreate(
+                [
+                    'user_id' => $user->id,
+                    'device_id' => $data['device_id'],
+                ],
+                [
+                    'fcm_token' => $data['fcm_token'] ?? 'default_fcm_token',
+                    'device_type' => $data['device_type'] ?? 'android',
+                    'is_active' => true,
+                    'last_login_at' => now(),
+                ]
+            );
+        }
 
         // Resolve linked restaurant details
         $restaurant = null;
@@ -141,12 +143,10 @@ class AuthService
      */
     public function logout(User $user, ?string $fcmToken = null): void
     {
-        // 1. Invalidate current personal access token
         if ($user->currentAccessToken()) {
             $user->currentAccessToken()->delete();
         }
 
-        // 2. Deactivate target device
         if ($fcmToken) {
             UserDevice::where('user_id', $user->id)
                 ->where('fcm_token', $fcmToken)
@@ -164,14 +164,11 @@ class AuthService
      */
     public function updateProfile(User $user, array $data): User
     {
-        // Handle Profile Image upload
         if (isset($data['profile_image'])) {
-            // Delete old profile image if exists
             if ($user->profile_image) {
                 $this->imageService->delete($user->profile_image);
             }
 
-            // Upload new image
             $url = $this->imageService->upload($data['profile_image'], 'profile-images');
             $user->profile_image = $url;
         }

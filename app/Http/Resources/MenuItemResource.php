@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Services\ImageUploadService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -9,13 +10,15 @@ class MenuItemResource extends JsonResource
 {
     public function toArray(Request $request): array
     {
+        $imageService = app(ImageUploadService::class);
+
         return [
             'id' => $this->id,
             'restaurant_id' => $this->restaurant_id,
             'category_id' => $this->category_id,
             'name' => $this->name,
             'description' => $this->description,
-            'image' => $this->image,
+            'image' => $this->image ? $imageService->formatUrl($this->image) : null,
             'price' => (float)$this->price,
             'discount_price' => $this->discount_price ? (float)$this->discount_price : null,
             'active_price' => (float)$this->active_price,
@@ -26,3 +29,4 @@ class MenuItemResource extends JsonResource
         ];
     }
 }
+

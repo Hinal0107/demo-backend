@@ -16,7 +16,9 @@ class CreateOrderRequest extends FormRequest
         return [
             'restaurant_id' => 'required|integer|exists:restaurants,id',
             'address_id' => 'required|integer|exists:addresses,id',
-            'items' => 'required|array|min:1',
+            'subscription_id' => 'nullable|integer|exists:subscriptions,id',
+            'include_subscription_meal' => 'nullable|boolean',
+            'items' => 'nullable|array',
             'items.*.menu_item_id' => 'required_without:items.*.addon_id|nullable|integer|exists:menu_items,id',
             'items.*.addon_id' => 'required_without:items.*.menu_item_id|nullable|integer|exists:addons,id',
             'items.*.quantity' => 'required|integer|min:1',
