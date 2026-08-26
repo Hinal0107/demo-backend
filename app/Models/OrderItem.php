@@ -10,6 +10,7 @@ class OrderItem extends Model
         'order_id',
         'menu_item_id',
         'addon_id',
+        'daily_meal_id',
         'item_name',
         'quantity',
         'unit_price',
@@ -35,5 +36,10 @@ class OrderItem extends Model
     public function addon()
     {
         return $this->belongsTo(Addon::class, 'addon_id');
+    }
+
+    public function dailyMeal()
+    {
+        return $this->belongsTo(DailyMeal::class, 'daily_meal_id');
     }
 }

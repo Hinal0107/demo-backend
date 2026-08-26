@@ -47,8 +47,9 @@ Route::prefix('v1')->group(function () {
         // CUSTOMER Scoped Operations
         Route::middleware('role:CUSTOMER')->group(function () {
             
-            // Restaurant Listings
+            // Restaurant Listings & Selection
             Route::get('/restaurants', [CustomerRestaurantController::class, 'index']);
+            Route::post('/customer/select-restaurant', [CustomerRestaurantController::class, 'selectRestaurant']);
             Route::get('/restaurants/{restaurantId}', [CustomerRestaurantController::class, 'show']);
 
             // Protected Meal Access (Requires Free Trial or Active Subscription)

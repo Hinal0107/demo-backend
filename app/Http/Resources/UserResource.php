@@ -20,6 +20,12 @@ class UserResource extends JsonResource
             'role' => strtolower($this->role),
             'profile_image' => $this->profile_image ? $imageService->formatUrl($this->profile_image) : null,
             'status' => $this->status,
+            'selected_restaurant_id' => $this->selected_restaurant_id,
+            'selected_restaurant' => $this->selectedRestaurant ? [
+                'id' => $this->selectedRestaurant->id,
+                'name' => $this->selectedRestaurant->name,
+                'logo' => $this->selectedRestaurant->logo ? $imageService->formatUrl($this->selectedRestaurant->logo) : null,
+            ] : null,
             'created_at' => $this->created_at?->toDateTimeString(),
         ];
     }

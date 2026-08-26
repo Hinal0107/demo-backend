@@ -21,6 +21,7 @@ class User extends Authenticatable
         'role',
         'profile_image',
         'status',
+        'selected_restaurant_id',
     ];
 
     protected $hidden = [
@@ -86,5 +87,10 @@ class User extends Authenticatable
     public function userDevices()
     {
         return $this->hasMany(UserDevice::class, 'user_id');
+    }
+
+    public function selectedRestaurant()
+    {
+        return $this->belongsTo(Restaurant::class, 'selected_restaurant_id');
     }
 }

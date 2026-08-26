@@ -133,7 +133,33 @@ class OrderService
                     $itemsToCreate[] = [
                         'menu_item_id' => $menuItem->id,
                         'addon_id' => null,
+                        'daily_meal_id' => null,
                         'item_name' => $menuItem->name,
+                        'quantity' => $qty,
+                        'unit_price' => $price,
+                        'total_price' => $totalPrice,
+                    ];
+                } elseif (isset($itemData['daily_meal_id'])) {
+                    $dailyMeal = \App\Models\DailyMeal::active()->findOrFail($itemData['daily_meal_id']);
+
+                    if ((int)$dailyMeal->restaurant_id !== (int)$restaurantId) {
+                        throw new Exception("Daily meal '{$dailyMeal->name}' does not belong to the selected restaurant.", 422);
+                    }
+
+                    $qty = $itemData['quantity'];
+                    if ($qty <= 0) {
+                        throw new Exception('Quantity must be greater than 0.', 422);
+                    }
+
+                    $price = $dailyMeal->discount_price && $dailyMeal->discount_price > 0 ? $dailyMeal->discount_price : $dailyMeal->price;
+                    $totalPrice = $price * $qty;
+                    $subtotal += $totalPrice;
+
+                    $itemsToCreate[] = [
+                        'menu_item_id' => null,
+                        'addon_id' => null,
+                        'daily_meal_id' => $dailyMeal->id,
+                        'item_name' => $dailyMeal->name,
                         'quantity' => $qty,
                         'unit_price' => $price,
                         'total_price' => $totalPrice,

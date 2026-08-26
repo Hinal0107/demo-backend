@@ -23,6 +23,7 @@ class Restaurant extends Model
         'pincode',
         'latitude',
         'longitude',
+        'delivery_radius_km',
         'opening_time',
         'closing_time',
         'bank_account_holder',
@@ -36,6 +37,18 @@ class Restaurant extends Model
     public function scopeActive($query)
     {
         return $query->where('status', 'ACTIVE');
+    }
+
+    public function scopeNearby($query, $latitude, $longitude, $maxDistanceKm = null)
+    {
+        $haversine = "(6371 * acos(cos(radians(?)) * cos(radians(latitude)) * cos(radians(longitude) - radians(?)) + sin(radians(?)) * sin(radians(latitude))))";
+
+        return $query->select('*')
+            ->selectRaw("{$haversine} AS distance", [$latitude, $longitude, $latitude])
+            ->whereNotNull('latitude')
+            ->whereNotNull('longitude')
+            ->whereRaw("{$haversine} <= COALESCE(?, delivery_radius_km)", [$latitude, $longitude, $latitude, $maxDistanceKm])
+            ->orderBy('distance');
     }
 
     // Relationships

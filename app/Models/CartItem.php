@@ -11,6 +11,7 @@ class CartItem extends Model
         'restaurant_id',
         'menu_item_id',
         'addon_id',
+        'daily_meal_id',
         'quantity',
         'unit_price',
         'total_price',
@@ -40,5 +41,10 @@ class CartItem extends Model
     public function addon()
     {
         return $this->belongsTo(Addon::class, 'addon_id');
+    }
+
+    public function dailyMeal()
+    {
+        return $this->belongsTo(DailyMeal::class, 'daily_meal_id');
     }
 }
