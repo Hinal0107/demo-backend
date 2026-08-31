@@ -186,4 +186,29 @@ class OrderController extends Controller
             ]
         ]);
     }
+
+    /**
+     * POST /orders/{id}/confirm-received
+     */
+    public function confirmReceived(Request $request, int $id): JsonResponse
+    {
+        $order = Order::where('customer_id', $request->user()->id)->findOrFail($id);
+
+        if (!$order->delivery_otp) {
+            $order->delivery_otp = (string)rand(1000, 9999);
+        }
+
+        $order->otp_revealed = true;
+        $order->save();
+
+        try {
+            $notificationService = app(\App\Services\NotificationService::class);
+            $notificationService->notifyRestaurantCustomerConfirmedReceipt($order);
+        } catch (\Exception $e) {}
+
+        return $this->successResponse(
+            new OrderResource($order),
+            'Order receipt confirmed. Your delivery OTP is ' . $order->delivery_otp
+        );
+    }
 }

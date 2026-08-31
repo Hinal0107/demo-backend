@@ -250,6 +250,19 @@ class OrderService
                 ->where('restaurant_id', $restaurantId)
                 ->delete();
 
+            // 9. Dispatch Customer & Restaurant Notifications
+            try {
+                $notificationService = app(\App\Services\NotificationService::class);
+                $notificationService->notifyRestaurantNewOrder($order);
+                if ($order->order_status === 'CONFIRMED' || $order->payment_status === 'PAID') {
+                    $notificationService->notifyCustomerPaymentSuccess($order);
+                } else {
+                    $notificationService->notifyCustomerPaymentPending($order);
+                }
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::error('Failed to send order creation notifications: ' . $e->getMessage());
+            }
+
             return $order;
         });
     }
@@ -365,8 +378,15 @@ class OrderService
 
         // Handle OTP verification for marking delivered
         if ($newDeliveryStatus === 'DELIVERED') {
-            if ($order->delivery_otp && (!isset($additionalData['delivery_otp']) || $additionalData['delivery_otp'] !== $order->delivery_otp)) {
-                throw new Exception('Invalid or missing Delivery OTP.', 422);
+            if (!$order->delivery_otp) {
+                $order->delivery_otp = (string)rand(1000, 9999);
+                $order->save();
+            }
+            if (!$order->otp_revealed) {
+                throw new Exception('Customer has not confirmed receipt yet. Customer must click Confirm Received to reveal OTP.', 422);
+            }
+            if (!isset($additionalData['delivery_otp']) || trim((string)$additionalData['delivery_otp']) !== (string)$order->delivery_otp) {
+                throw new Exception('Invalid 4-digit Delivery OTP. Please enter the correct OTP provided by the customer.', 422);
             }
         }
 

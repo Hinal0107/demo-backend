@@ -24,6 +24,7 @@ class MenuItemRequest extends FormRequest
             'availability' => 'nullable|boolean',
             'status' => 'nullable|string|in:ACTIVE,INACTIVE',
             'sort_order' => 'nullable|integer|min:0',
+            'is_addon' => 'nullable',
         ];
     }
 }

@@ -20,7 +20,9 @@ class MenuCategory extends Model
 
     public function scopeActive($query)
     {
-        return $query->where('status', 'ACTIVE');
+        return $query->where(function($q) {
+            $q->whereIn('status', ['ACTIVE', 'active'])->orWhereNull('status');
+        });
     }
 
     public function restaurant()

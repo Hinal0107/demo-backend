@@ -80,7 +80,7 @@ class MenuService
             $imageUrl = $this->imageService->upload($data['image'], 'menu-items');
         }
 
-        return MenuItem::create([
+        $item = MenuItem::create([
             'restaurant_id' => $restaurantId,
             'category_id' => $data['category_id'],
             'name' => $data['name'],
@@ -93,6 +93,23 @@ class MenuService
             'status' => $data['status'] ?? 'ACTIVE',
             'sort_order' => $data['sort_order'] ?? 0,
         ]);
+
+        $cName = strtolower($category->name);
+        $isAddon = !empty($data['is_addon']) || str_contains($cName, 'add-on') || str_contains($cName, 'addon') || str_contains($cName, 'extra') || str_contains($cName, 'side') || str_contains($cName, 'farsan') || str_contains($cName, 'sweet') || str_contains($cName, 'dessert');
+        if ($isAddon) {
+            \App\Models\Addon::updateOrCreate([
+                'restaurant_id' => $restaurantId,
+                'name' => $item->name,
+            ], [
+                'description' => $item->description,
+                'price' => $item->price,
+                'image' => $item->image,
+                'availability' => $item->availability,
+                'status' => $item->status,
+            ]);
+        }
+
+        return $item;
     }
 
     public function updateMenuItem(MenuItem $item, array $data): MenuItem
@@ -123,6 +140,23 @@ class MenuService
         }
 
         $item->save();
+
+        $category = MenuCategory::find($item->category_id);
+        $cName = $category ? strtolower($category->name) : '';
+        $isAddon = !empty($data['is_addon']) || str_contains($cName, 'add-on') || str_contains($cName, 'addon') || str_contains($cName, 'extra') || str_contains($cName, 'side') || str_contains($cName, 'farsan') || str_contains($cName, 'sweet') || str_contains($cName, 'dessert');
+        if ($isAddon) {
+            \App\Models\Addon::updateOrCreate([
+                'restaurant_id' => $item->restaurant_id,
+                'name' => $item->name,
+            ], [
+                'description' => $item->description,
+                'price' => $item->price,
+                'image' => $item->image,
+                'availability' => $item->availability,
+                'status' => $item->status,
+            ]);
+        }
+
         return $item;
     }
 

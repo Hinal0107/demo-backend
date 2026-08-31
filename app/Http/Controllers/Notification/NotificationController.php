@@ -77,4 +77,30 @@ class NotificationController extends Controller
             'unread_count' => $count,
         ], 'Unread notification count fetched successfully.');
     }
+
+    /**
+     * POST /api/v1/notifications
+     */
+    public function store(Request $request): JsonResponse
+    {
+        $request->validate([
+            'title' => 'required|string',
+            'body' => 'nullable|string',
+            'message' => 'nullable|string',
+            'role' => 'nullable|string',
+        ]);
+
+        $notificationService = app(\App\Services\NotificationService::class);
+        $user = $request->user();
+        $title = $request->input('title');
+        $message = $request->input('body') ?? $request->input('message') ?? '';
+        $data = $request->input('data', []);
+
+        $notification = $notificationService->sendNotification($user, 'general', $title, $message, $data);
+
+        return $this->successResponse(
+            new NotificationResource($notification),
+            'Notification created successfully.'
+        );
+    }
 }

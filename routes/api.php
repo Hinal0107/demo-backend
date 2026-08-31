@@ -93,6 +93,7 @@ Route::prefix('v1')->group(function () {
             Route::get('/orders', [OrderController::class, 'index']);
             Route::get('/orders/{id}', [OrderController::class, 'show']);
             Route::post('/orders/{id}/cancel', [OrderController::class, 'cancel']);
+    Route::post('/orders/{id}/confirm-received', [OrderController::class, 'confirmReceived']);
             Route::get('/orders/{id}/tracking', [OrderController::class, 'tracking']);
         });
 
@@ -145,6 +146,7 @@ Route::prefix('v1')->group(function () {
         Route::post('/devices/unregister', [FcmTokenController::class, 'unregister']);
         Route::post('/device/fcm-token', [FcmTokenController::class, 'store']);
         Route::get('/notifications', [NotificationController::class, 'index']);
+        Route::post('/notifications', [NotificationController::class, 'store']);
         Route::get('/notifications/unread-count', [NotificationController::class, 'unreadCount']);
         Route::post('/notifications/read', [NotificationController::class, 'read']);
         Route::post('/notifications/{id}/read', [NotificationController::class, 'read']);

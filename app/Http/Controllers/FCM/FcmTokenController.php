@@ -31,6 +31,13 @@ class FcmTokenController extends Controller
         // Clean up any existing records with the same FCM token to avoid unique constraint violations
         UserDevice::where('fcm_token', $token)->delete();
 
+        $user = $request->user();
+        if ($user) {
+            $user->fcm_token = $token;
+            $user->device_type = $deviceType;
+            $user->save();
+        }
+
         $fcm = UserDevice::updateOrCreate(
             [
                 'user_id' => $userId,

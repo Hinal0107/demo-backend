@@ -30,6 +30,7 @@ class OrderResource extends JsonResource
             'scheduled_date' => $this->scheduled_date?->toDateString(),
             'notes' => $this->notes,
             'delivery_otp' => $this->delivery_otp,
+            'otp_revealed' => (bool)$this->otp_revealed,
             'confirmed_at' => $this->confirmed_at?->toDateTimeString(),
             'preparing_at' => $this->preparing_at?->toDateTimeString(),
             'ready_at' => $this->ready_at?->toDateTimeString(),

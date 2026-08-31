@@ -18,6 +18,8 @@ class CustomerDailyMealController extends Controller
     public function todayMeal(int $restaurantId): JsonResponse
     {
         $restaurant = Restaurant::active()->findOrFail($restaurantId);
+
+        // 1. Try meal_type 'TODAY' on today's date
         $meal = DailyMeal::active()
             ->where('restaurant_id', $restaurantId)
             ->where('meal_type', 'TODAY')
@@ -25,13 +27,30 @@ class CustomerDailyMealController extends Controller
             ->orderBy('id', 'desc')
             ->first();
 
+        // 2. Fallback to any active meal_type 'TODAY' for this restaurant
         if (!$meal) {
-            // Fallback to date if no meal_type 'TODAY' is explicitly scheduled
+            $meal = DailyMeal::active()
+                ->where('restaurant_id', $restaurantId)
+                ->where('meal_type', 'TODAY')
+                ->orderBy('id', 'desc')
+                ->first();
+        }
+
+        // 3. Fallback to any active meal scheduled for today's date
+        if (!$meal) {
             $meal = DailyMeal::active()
                 ->where('restaurant_id', $restaurantId)
                 ->whereDate('date', Carbon::today())
-                ->where('meal_type', '!=', 'WEEKLY')
-                ->where('meal_type', '!=', 'TOMORROW')
+                ->whereNotIn('meal_type', ['WEEKLY', 'TOMORROW', 'ADDON'])
+                ->orderBy('id', 'desc')
+                ->first();
+        }
+
+        // 4. Fallback to the latest active non-addon daily meal
+        if (!$meal) {
+            $meal = DailyMeal::active()
+                ->where('restaurant_id', $restaurantId)
+                ->whereNotIn('meal_type', ['WEEKLY', 'TOMORROW', 'ADDON'])
                 ->orderBy('id', 'desc')
                 ->first();
         }
@@ -46,6 +65,8 @@ class CustomerDailyMealController extends Controller
     public function tomorrowMeal(int $restaurantId): JsonResponse
     {
         $restaurant = Restaurant::active()->findOrFail($restaurantId);
+
+        // 1. Try meal_type 'TOMORROW' on tomorrow's date
         $meal = DailyMeal::active()
             ->where('restaurant_id', $restaurantId)
             ->where('meal_type', 'TOMORROW')
@@ -53,15 +74,42 @@ class CustomerDailyMealController extends Controller
             ->orderBy('id', 'desc')
             ->first();
 
+        // 2. Fallback to any active meal_type 'TOMORROW' for this restaurant
         if (!$meal) {
-            // Fallback to date if no meal_type 'TOMORROW' is explicitly scheduled
+            $meal = DailyMeal::active()
+                ->where('restaurant_id', $restaurantId)
+                ->where('meal_type', 'TOMORROW')
+                ->orderBy('id', 'desc')
+                ->first();
+        }
+
+        // 3. Fallback to any active meal scheduled for tomorrow's date
+        if (!$meal) {
             $meal = DailyMeal::active()
                 ->where('restaurant_id', $restaurantId)
                 ->whereDate('date', Carbon::tomorrow())
-                ->where('meal_type', '!=', 'WEEKLY')
-                ->where('meal_type', '!=', 'TODAY')
+                ->whereNotIn('meal_type', ['WEEKLY', 'TODAY', 'ADDON'])
                 ->orderBy('id', 'desc')
                 ->first();
+        }
+
+        // 4. Fallback to second latest or any available daily meal distinct from today's
+        if (!$meal) {
+            $todayMeal = DailyMeal::active()
+                ->where('restaurant_id', $restaurantId)
+                ->where('meal_type', 'TODAY')
+                ->orderBy('id', 'desc')
+                ->first();
+
+            $query = DailyMeal::active()
+                ->where('restaurant_id', $restaurantId)
+                ->whereNotIn('meal_type', ['WEEKLY', 'ADDON']);
+
+            if ($todayMeal) {
+                $query->where('id', '!=', $todayMeal->id);
+            }
+
+            $meal = $query->orderBy('id', 'desc')->first();
         }
 
         if (!$meal) {
@@ -91,12 +139,13 @@ class CustomerDailyMealController extends Controller
     {
         $restaurant = Restaurant::active()->findOrFail($restaurantId);
         
-        $date = $request->query('date', Carbon::today()->toDateString());
-        
-        $meals = DailyMeal::active()
-            ->where('restaurant_id', $restaurantId)
-            ->whereDate('date', $date)
-            ->orderBy('id', 'desc')
+        $query = DailyMeal::active()->where('restaurant_id', $restaurantId);
+
+        if ($request->has('date')) {
+            $query->whereDate('date', $request->query('date'));
+        }
+
+        $meals = $query->orderBy('id', 'desc')
             ->get()
             ->map(function ($meal) {
                 return $this->formatMealResponse($meal);

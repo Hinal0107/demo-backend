@@ -54,6 +54,14 @@ class NotificationService
             ->pluck('fcm_token')
             ->toArray();
 
+        if (!empty($user->fcm_token) && !in_array($user->fcm_token, $tokens)) {
+            $tokens[] = $user->fcm_token;
+        }
+
+        $tokens = array_values(array_unique(array_filter($tokens, function($t) {
+            return !empty($t) && !str_starts_with($t, 'fcm_token_') && $t !== 'default_fcm_token' && strlen($t) > 15;
+        })));
+
         if (!empty($tokens)) {
             $this->sendFCM($tokens, $title, $message, array_merge($data ?: [], [
                 'type' => $type,
@@ -112,6 +120,27 @@ class NotificationService
      | Event Specific Helper Notifications
      |--------------------------------------------------------------------------
      */
+
+    
+    public function notifyRestaurantCustomerConfirmedReceipt(Order $order): void
+    {
+        $restaurant = $order->restaurant;
+        if (!$restaurant) return;
+
+        $customerName = $order->customer->name ?? 'Customer';
+        $title = 'Customer Confirmed Receipt';
+        $message = "Customer {$customerName} for order #{$order->order_number} has confirmed receipt. OTP is {$order->delivery_otp}.";
+        $data = [
+            'type' => 'customer_confirmed_receipt',
+            'order_id' => (string)$order->id,
+            'order_number' => $order->order_number,
+            'delivery_otp' => (string)$order->delivery_otp,
+            'status' => 'confirmed_receipt',
+        ];
+        $idempotencyKey = "order_{$order->id}_confirmed_receipt";
+
+        $this->sendToRestaurant($restaurant, 'customer_confirmed_receipt', $title, $message, $data, $idempotencyKey);
+    }
 
     public function notifyRestaurantNewOrder(Order $order): void
     {
@@ -254,11 +283,14 @@ class NotificationService
         $customer = $order->customer;
         if (!$customer) return;
 
+        $otpMsg = $order->delivery_otp ? " Your delivery OTP is {$order->delivery_otp}." : "";
         $title = 'Order Out for Delivery';
-        $message = "Your order #{$order->order_number} is out for delivery.";
+        $message = "Your order #{$order->order_number} is out for delivery!{$otpMsg} Please share this OTP with your delivery driver.";
         $data = [
             'type' => 'order_out_for_delivery',
             'order_id' => (string)$order->id,
+            'order_number' => $order->order_number,
+            'delivery_otp' => (string)$order->delivery_otp,
             'status' => 'out_for_delivery',
         ];
         $idempotencyKey = "order_{$order->id}_out_for_delivery";
@@ -269,18 +301,32 @@ class NotificationService
     public function notifyCustomerOrderDelivered(Order $order): void
     {
         $customer = $order->customer;
-        if (!$customer) return;
+        if ($customer) {
+            $title = 'Order Delivered';
+            $message = "Your order #{$order->order_number} has been delivered successfully.";
+            $data = [
+                'type' => 'order_delivered',
+                'order_id' => (string)$order->id,
+                'status' => 'delivered',
+            ];
+            $idempotencyKey = "order_{$order->id}_delivered_cust";
 
-        $title = 'Order Delivered';
-        $message = "Your order #{$order->order_number} has been delivered successfully.";
-        $data = [
-            'type' => 'order_delivered',
-            'order_id' => (string)$order->id,
-            'status' => 'delivered',
-        ];
-        $idempotencyKey = "order_{$order->id}_delivered";
+            $this->sendToCustomer($customer, 'order_delivered', $title, $message, $data, $idempotencyKey);
+        }
 
-        $this->sendToCustomer($customer, 'order_delivered', $title, $message, $data, $idempotencyKey);
+        $restaurant = $order->restaurant;
+        if ($restaurant) {
+            $title = 'OTP Verified & Order Completed';
+            $message = "OTP verified successfully. Order #{$order->order_number} marked as completed.";
+            $data = [
+                'type' => 'order_completed',
+                'order_id' => (string)$order->id,
+                'status' => 'completed',
+            ];
+            $idempotencyKey = "order_{$order->id}_delivered_rest";
+
+            $this->sendToRestaurant($restaurant, 'order_completed', $title, $message, $data, $idempotencyKey);
+        }
     }
 
     public function notifyOrderCancelled(Order $order, string $reason): void
