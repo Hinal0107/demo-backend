@@ -22,42 +22,54 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         // 1. Create Users
-        $admin = User::create([
+        $admin = User::firstOrCreate(['email' => 'admin@tiffin.com'], [
             'name' => 'Super Admin',
-            'email' => 'admin@tiffin.com',
             'phone' => '+447000000001',
-            'password' => Hash::make('password'),
+            'password' => Hash::make('password123'),
             'firebase_uid' => 'mock-uid-admin',
             'role' => 'SUPER_ADMIN',
             'status' => 'ACTIVE',
         ]);
 
-        $restaurantManager = User::create([
+        $restaurantManager = User::firstOrCreate(['email' => 'restaurant@tiffin.com'], [
             'name' => 'Restaurant Manager',
-            'email' => 'restaurant@tiffin.com',
             'phone' => '+447000000002',
-            'password' => Hash::make('password'),
+            'password' => Hash::make('password123'),
             'firebase_uid' => 'mock-uid-restaurant',
             'role' => 'RESTAURANT',
             'status' => 'ACTIVE',
         ]);
 
-        $customer = User::create([
+        $customer = User::firstOrCreate(['email' => 'customer@tiffin.com'], [
             'name' => 'John Customer',
-            'email' => 'customer@tiffin.com',
             'phone' => '+447000000003',
-            'password' => Hash::make('password'),
+            'password' => Hash::make('password123'),
             'firebase_uid' => 'mock-uid-customer',
             'role' => 'CUSTOMER',
+            'status' => 'ACTIVE',
+        ]);
+
+        $postmanCustomer = User::firstOrCreate(['email' => 'hinal@example.com'], [
+            'name' => 'Hinal Shah',
+            'phone' => '9876543210',
+            'password' => Hash::make('password123'),
+            'role' => 'CUSTOMER',
+            'status' => 'ACTIVE',
+        ]);
+
+        $postmanRestaurant = User::firstOrCreate(['email' => 'restaurant@example.com'], [
+            'name' => 'Ghar Ka Khana Manager',
+            'phone' => '9876543211',
+            'password' => Hash::make('password123'),
+            'role' => 'RESTAURANT',
             'status' => 'ACTIVE',
         ]);
 
         // 2. Create Restaurant
         $baseUrl = rtrim(config('app.url', 'http://192.168.1.231:8000'), '/');
 
-        $restaurant = Restaurant::create([
+        $restaurant = Restaurant::firstOrCreate(['email' => 'royal@tiffin.com'], [
             'name' => 'Royal Tiffin Service',
-            'email' => 'royal@tiffin.com',
             'phone' => '+447111222333',
             'logo' => $baseUrl . '/storage/restaurants/royal_tiffin.png',
             'description' => 'Gourmet daily lunch and dinner tiffin deliveries.',
@@ -74,17 +86,27 @@ class DatabaseSeeder extends Seeder
         ]);
 
         // Link Restaurant User
-        RestaurantUser::create([
+        RestaurantUser::firstOrCreate([
             'restaurant_id' => $restaurant->id,
             'user_id' => $restaurantManager->id,
+        ], [
+            'role' => 'owner',
+            'status' => 'ACTIVE',
+        ]);
+
+        RestaurantUser::firstOrCreate([
+            'restaurant_id' => $restaurant->id,
+            'user_id' => $postmanRestaurant->id,
+        ], [
             'role' => 'owner',
             'status' => 'ACTIVE',
         ]);
 
         // Link Restaurant Customer
-        RestaurantCustomer::create([
+        RestaurantCustomer::firstOrCreate([
             'restaurant_id' => $restaurant->id,
             'customer_id' => $customer->id,
+        ], [
             'status' => 'ACTIVE',
         ]);
 

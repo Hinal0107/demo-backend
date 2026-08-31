@@ -18,7 +18,7 @@ class AuthorizeRole
      */
     public function handle(Request $request, Closure $next, ...$roles): Response
     {
-        $user = auth()->user();
+        $user = $request->user() ?? auth()->user();
 
         if (!$user) {
             return response()->json([

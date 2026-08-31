@@ -17,7 +17,7 @@ class EnforceRestaurantIsolation
      */
     public function handle(Request $request, Closure $next): Response
     {
-        $user = auth()->user();
+        $user = $request->user() ?? auth()->user();
 
         if (!$user) {
             return response()->json([

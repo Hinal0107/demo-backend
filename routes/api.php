@@ -37,7 +37,7 @@ Route::prefix('v1')->group(function () {
     Route::post('/payments/worldpay/simulate', [WorldpayController::class, 'simulate']);
 
     // 3. Protected Routes (validated via Firebase Token or Sanctum)
-    Route::middleware('auth:sanctum')->group(function () {
+    Route::middleware('auth.firebase')->group(function () {
         
         // Auth management
         Route::post('/auth/logout', [AuthController::class, 'logout']);
