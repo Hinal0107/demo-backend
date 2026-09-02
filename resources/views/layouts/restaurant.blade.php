@@ -4,6 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@yield('title', 'Tiffin Service Restaurant Portal')</title>
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('images/restaurant-favicon-32x32.png') }}">
+    <link rel="icon" type="image/png" sizes="48x48" href="{{ asset('images/restaurant-favicon-48x48.png') }}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('images/restaurant-favicon-16x16.png') }}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('images/restaurant-favicon-180x180.png') }}">
+    <link rel="shortcut icon" href="{{ asset('favicon.ico') }}">
     <!-- Custom Modern Vanilla CSS Styling matching orange/green/white theme -->
     <style>
         :root {
@@ -53,14 +59,27 @@
         }
 
         .sidebar-logo {
-            padding: 10px 25px 25px;
-            font-size: 20px;
+            padding: 15px 25px 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 18px;
             font-weight: 800;
-            letter-spacing: 1px;
+            letter-spacing: 0.5px;
             background: var(--accent-gradient);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             text-transform: uppercase;
+        }
+
+        .brand-logo {
+            width: 36px;
+            height: 36px;
+            object-fit: contain;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(249, 115, 22, 0.25);
+            background-color: #ffffff;
+            flex-shrink: 0;
         }
 
         .menu-list {
@@ -365,7 +384,10 @@
 
     <!-- Sidebar -->
     <div class="sidebar">
-        <div class="sidebar-logo">Kitchen Admin</div>
+        <div class="sidebar-logo">
+            <img src="{{ asset('images/logo.png') }}" alt="Kitchen Logo" class="brand-logo">
+            <span>Kitchen Admin</span>
+        </div>
         <ul class="menu-list">
             <li class="menu-item {{ Request::routeIs('restaurant.dashboard') ? 'active' : '' }}">
                 <a href="{{ route('restaurant.dashboard') }}">Dashboard</a>

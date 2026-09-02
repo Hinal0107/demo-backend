@@ -4,6 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@yield('title', 'Tiffin Service Admin Portal')</title>
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('images/admin-favicon-32x32.png') }}">
+    <link rel="icon" type="image/png" sizes="48x48" href="{{ asset('images/admin-favicon-48x48.png') }}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('images/admin-favicon-16x16.png') }}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('images/admin-favicon-180x180.png') }}">
+    <link rel="shortcut icon" href="{{ asset('admin-favicon.ico') }}">
     <!-- Custom Modern Vanilla CSS Styling -->
     <style>
         :root {
@@ -53,14 +59,27 @@
         }
 
         .sidebar-logo {
-            padding: 10px 25px 25px;
-            font-size: 20px;
+            padding: 15px 25px 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 18px;
             font-weight: 800;
-            letter-spacing: 1px;
+            letter-spacing: 0.5px;
             background: var(--accent-gradient);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             text-transform: uppercase;
+        }
+
+        .brand-logo {
+            width: 36px;
+            height: 36px;
+            object-fit: contain;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(22, 101, 52, 0.25);
+            background-color: #ffffff;
+            flex-shrink: 0;
         }
 
         .menu-list {
@@ -365,7 +384,10 @@
 
     <!-- Sidebar -->
     <div class="sidebar">
-        <div class="sidebar-logo">Tiffin Admin</div>
+        <div class="sidebar-logo">
+            <img src="{{ asset('images/admin-logo.png') }}" alt="Admin Logo" class="brand-logo">
+            <span>Tiffin Admin</span>
+        </div>
         <ul class="menu-list">
             <li class="menu-item {{ Request::routeIs('admin.dashboard') ? 'active' : '' }}">
                 <a href="{{ route('admin.dashboard') }}">Dashboard</a>

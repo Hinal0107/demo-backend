@@ -4,6 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Super Admin Login</title>
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('images/admin-favicon-32x32.png') }}">
+    <link rel="icon" type="image/png" sizes="48x48" href="{{ asset('images/admin-favicon-48x48.png') }}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('images/admin-favicon-16x16.png') }}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('images/admin-favicon-180x180.png') }}">
+    <link rel="shortcut icon" href="{{ asset('admin-favicon.ico') }}">
     <style>
         :root {
             --bg-primary: #f8fafc;
@@ -49,6 +55,17 @@
         .card-header {
             text-align: center;
             margin-bottom: 30px;
+        }
+
+        .login-logo-img {
+            width: 72px;
+            height: 72px;
+            object-fit: contain;
+            border-radius: 16px;
+            margin-bottom: 12px;
+            box-shadow: 0 4px 15px rgba(22, 101, 52, 0.25);
+            background-color: #ffffff;
+            padding: 4px;
         }
 
         .logo {
@@ -132,6 +149,7 @@
 
     <div class="login-card">
         <div class="card-header">
+            <img src="{{ asset('images/admin-logo.png') }}" alt="Tiffin Admin Logo" class="login-logo-img">
             <div class="logo">Tiffin Admin</div>
             <div class="subtitle">Sign in to manage the platform</div>
         </div>

@@ -4,6 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Restaurant Manager Login</title>
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('images/restaurant-favicon-32x32.png') }}">
+    <link rel="icon" type="image/png" sizes="48x48" href="{{ asset('images/restaurant-favicon-48x48.png') }}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('images/restaurant-favicon-16x16.png') }}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('images/restaurant-favicon-180x180.png') }}">
+    <link rel="shortcut icon" href="{{ asset('favicon.ico') }}">
     <style>
         :root {
             --bg-primary: #f8fafc;
@@ -48,6 +54,17 @@
         .card-header {
             text-align: center;
             margin-bottom: 30px;
+        }
+
+        .login-logo-img {
+            width: 72px;
+            height: 72px;
+            object-fit: contain;
+            border-radius: 16px;
+            margin-bottom: 12px;
+            box-shadow: 0 4px 15px rgba(249, 115, 22, 0.25);
+            background-color: #ffffff;
+            padding: 4px;
         }
 
         .logo {
@@ -131,6 +148,7 @@
 
     <div class="login-card">
         <div class="card-header">
+            <img src="{{ asset('images/logo.png') }}" alt="Kitchen Partner Logo" class="login-logo-img">
             <div class="logo">Kitchen Partner</div>
             <div class="subtitle">Sign in to manage your kitchen portal</div>
         </div>
