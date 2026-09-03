@@ -36,7 +36,8 @@ class AuthController extends Controller
                 201
             );
         } catch (Exception $e) {
-            return $this->errorResponse($e->getMessage(), $e->getCode() ?: 400);
+            $code = is_numeric($e->getCode()) && (int)$e->getCode() >= 100 && (int)$e->getCode() < 600 ? (int)$e->getCode() : 400;
+            return $this->errorResponse($e->getMessage(), $code);
         }
     }
 
@@ -54,7 +55,8 @@ class AuthController extends Controller
                 'restaurant' => $result['restaurant'] ? $result['restaurant']->id : null,
             ], 'Login successful.');
         } catch (Exception $e) {
-            return $this->errorResponse($e->getMessage(), $e->getCode() ?: 400);
+            $code = is_numeric($e->getCode()) && (int)$e->getCode() >= 100 && (int)$e->getCode() < 600 ? (int)$e->getCode() : 400;
+            return $this->errorResponse($e->getMessage(), $code);
         }
     }
 

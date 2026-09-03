@@ -3,10 +3,13 @@
 @section('title', 'Manage Order #' . $order->order_number . ' - ' . $restaurant->name)
 
 @section('content')
-<div class="header-section">
+<div class="header-section" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
     <div>
-        <h1 class="page-title">Order #{{ $order->order_number }}</h1>
-        <p style="color: var(--text-secondary); margin-top: 5px;">Manage delivery lifecycle and preparation states</p>
+        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px;">
+            <a href="{{ route('restaurant.orders.index') }}" class="btn btn-secondary" style="padding: 6px 14px; font-size: 13px; text-decoration: none;">← Back to Orders</a>
+            <h1 class="page-title" style="margin: 0; font-size: 24px;">Order #{{ $order->order_number }}</h1>
+        </div>
+        <p style="color: var(--text-secondary); margin: 0;">Manage delivery lifecycle and preparation states</p>
     </div>
     <div class="restaurant-badge">
         {{ $restaurant->name }}
@@ -60,26 +63,26 @@
                             <td>
                                 <div style="font-weight: 600;">{{ $item->item_name }}</div>
                             </td>
-                            <td>£{{ number_format($item->unit_price, 2) }}</td>
+                            <td>£{{ number_format((float)($item->unit_price ?? 0), 2) }}</td>
                             <td>{{ $item->quantity }}</td>
-                            <td style="text-align: right; font-weight: 600;">£{{ number_format($item->unit_price * $item->quantity, 2) }}</td>
+                            <td style="text-align: right; font-weight: 600;">£{{ number_format((float)($item->total_price ?? ($item->unit_price * $item->quantity)), 2) }}</td>
                         </tr>
                     @endforeach
                     <tr style="border-top: 2px solid var(--border-color);">
                         <td colspan="3" style="text-align: right; font-weight: 600; padding-top: 15px;">Subtotal:</td>
-                        <td style="text-align: right; font-weight: 600; padding-top: 15px;">£{{ number_format($order->subtotal, 2) }}</td>
+                        <td style="text-align: right; font-weight: 600; padding-top: 15px;">£{{ number_format((float)($order->subtotal ?? 0), 2) }}</td>
                     </tr>
                     <tr>
                         <td colspan="3" style="text-align: right; font-weight: 600; padding-top: 5px;">Delivery Fee:</td>
-                        <td style="text-align: right; font-weight: 600; padding-top: 5px;">£{{ number_format($order->delivery_fee, 2) }}</td>
+                        <td style="text-align: right; font-weight: 600; padding-top: 5px;">£{{ number_format((float)($order->delivery_fee ?? 0), 2) }}</td>
                     </tr>
                     <tr>
                         <td colspan="3" style="text-align: right; font-weight: 600; padding-top: 5px;">Tax:</td>
-                        <td style="text-align: right; font-weight: 600; padding-top: 5px;">£{{ number_format($order->tax, 2) }}</td>
+                        <td style="text-align: right; font-weight: 600; padding-top: 5px;">£{{ number_format((float)($order->tax ?? 0), 2) }}</td>
                     </tr>
                     <tr>
                         <td colspan="3" style="text-align: right; font-weight: 700; padding-top: 10px; font-size: 16px;">Grand Total:</td>
-                        <td style="text-align: right; font-weight: 700; padding-top: 10px; font-size: 16px; color: var(--accent-primary);">£{{ number_format($order->total_amount, 2) }}</td>
+                        <td style="text-align: right; font-weight: 700; padding-top: 10px; font-size: 16px; color: var(--accent-primary);">£{{ number_format((float)($order->total_amount ?? 0), 2) }}</td>
                     </tr>
                 </tbody>
             </table>
@@ -97,11 +100,11 @@
                 <div class="form-group">
                     <label class="form-label" for="order_status">Order Status</label>
                     <select class="form-control" name="order_status" id="order_status" required>
-                        <option value="PENDING_PAYMENT" {{ $order->order_status === 'PENDING_PAYMENT' ? 'selected' : '' }} disabled>PENDING PAYMENT</option>
+                        <option value="PENDING_PAYMENT" {{ $order->order_status === 'PENDING_PAYMENT' ? 'selected' : '' }}>PENDING PAYMENT</option>
                         <option value="CONFIRMED" {{ $order->order_status === 'CONFIRMED' ? 'selected' : '' }}>CONFIRMED (Accept)</option>
                         <option value="PREPARING" {{ $order->order_status === 'PREPARING' ? 'selected' : '' }}>PREPARING (In Kitchen)</option>
                         <option value="READY" {{ $order->order_status === 'READY' ? 'selected' : '' }}>READY FOR PICKUP/DELIVERY</option>
-                        <option value="COMPLETED" {{ $order->order_status === 'COMPLETED' ? 'selected' : '' }} disabled>COMPLETED (Delivered)</option>
+                        <option value="COMPLETED" {{ $order->order_status === 'COMPLETED' ? 'selected' : '' }}>COMPLETED (Delivered)</option>
                         <option value="CANCELLED" {{ $order->order_status === 'CANCELLED' ? 'selected' : '' }}>CANCELLED (Reject)</option>
                     </select>
                 </div>

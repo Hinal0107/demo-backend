@@ -18,6 +18,10 @@ Route::get('/', function () {
 
 Route::get('/terms', [TermsAndConditionsController::class, 'showWeb'])->name('terms');
 
+// Worldpay Payment Return Redirect Landing Pages
+Route::get('/payment-success', [WorldpayController::class, 'paymentSuccess'])->name('payment.success');
+Route::get('/payment-failed', [WorldpayController::class, 'paymentFailed'])->name('payment.failed');
+
 // Admin Authentication Guest Routes
 Route::get('/admin/login', [AdminDashboardController::class, 'showLogin'])->name('admin.login');
 Route::post('/admin/login', [AdminDashboardController::class, 'login'])->name('admin.login.submit');

@@ -377,6 +377,60 @@
             color: var(--danger);
             border: 1px solid rgba(239, 68, 68, 0.3);
         }
+
+        /* Pagination Component Styling Fix */
+        nav[role="navigation"] {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 20px;
+            padding: 10px 0;
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+        nav[role="navigation"] svg {
+            width: 16px !important;
+            height: 16px !important;
+            max-width: 16px !important;
+            max-height: 16px !important;
+            vertical-align: middle;
+            display: inline-block;
+        }
+        nav[role="navigation"] > div {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            width: 100%;
+            justify-content: space-between;
+        }
+        nav[role="navigation"] span.relative,
+        nav[role="navigation"] a.relative {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 6px 12px;
+            margin: 0 2px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            background-color: var(--bg-secondary);
+            color: var(--text-primary);
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+        nav[role="navigation"] a.relative:hover {
+            background-color: var(--bg-primary);
+            border-color: var(--accent-primary);
+            color: var(--accent-primary);
+        }
+        nav[role="navigation"] span[aria-current="page"] > span {
+            background-color: var(--accent-primary);
+            color: #ffffff;
+            border-color: var(--accent-primary);
+            font-weight: 600;
+        }
     </style>
     @yield('styles')
 </head>

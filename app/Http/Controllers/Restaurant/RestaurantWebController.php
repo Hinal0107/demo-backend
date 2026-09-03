@@ -344,7 +344,7 @@ class RestaurantWebController extends Controller
         $order = $restaurant->orders()->findOrFail($id);
 
         $data = $request->validate([
-            'order_status' => 'required|in:CONFIRMED,PREPARING,READY,CANCELLED',
+            'order_status' => 'required|in:PENDING_PAYMENT,CONFIRMED,PREPARING,READY,COMPLETED,CANCELLED',
             'delivery_status' => 'nullable|in:PENDING,OUT_FOR_DELIVERY,DELIVERED',
         ]);
 

@@ -104,13 +104,7 @@ class AuthService
             UserDevice::where('fcm_token', $data['fcm_token'])->delete();
         }
 
-        // Save FCM token and device details to User model & UserDevice
-        if (!empty($data['fcm_token'])) {
-            $user->fcm_token = $data['fcm_token'];
-            $user->device_type = $data['device_type'] ?? 'android';
-            $user->save();
-        }
-
+        // Save device details to UserDevice table
         $deviceId = $data['device_id'] ?? ('device_' . $user->id);
         UserDevice::updateOrCreate(
             [

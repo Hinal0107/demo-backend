@@ -121,7 +121,33 @@ class NotificationService
      |--------------------------------------------------------------------------
      */
 
-    
+    /**
+     * Dispatch order status push notification by event key.
+     */
+    public function sendOrderStatusNotification(Order $order, string $event): void
+    {
+        switch ($event) {
+            case 'order_confirmed':
+                $this->notifyCustomerOrderConfirmed($order);
+                break;
+            case 'order_preparing':
+                $this->notifyCustomerOrderPreparing($order);
+                break;
+            case 'order_ready':
+                $this->notifyCustomerOrderReady($order);
+                break;
+            case 'order_cancelled':
+                $this->notifyOrderCancelled($order, 'Cancelled by restaurant');
+                break;
+            case 'delivery_out_for_delivery':
+                $this->notifyCustomerOrderOutForDelivery($order);
+                break;
+            case 'delivery_delivered':
+                $this->notifyCustomerOrderDelivered($order);
+                break;
+        }
+    }
+
     public function notifyRestaurantCustomerConfirmedReceipt(Order $order): void
     {
         $restaurant = $order->restaurant;

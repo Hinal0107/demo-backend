@@ -32,11 +32,6 @@ class FcmTokenController extends Controller
         UserDevice::where('fcm_token', $token)->delete();
 
         $user = $request->user();
-        if ($user) {
-            $user->fcm_token = $token;
-            $user->device_type = $deviceType;
-            $user->save();
-        }
 
         $fcm = UserDevice::updateOrCreate(
             [

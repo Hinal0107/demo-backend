@@ -23,6 +23,10 @@ use App\Http\Controllers\Notification\NotificationController;
 use App\Http\Controllers\TermsAndConditionsController;
 use App\Http\Middleware\CheckSubscriptionOrTrial;
 
+// Public Worldpay Endpoints (Direct /api/payments/worldpay/...)
+Route::post('/payments/worldpay/create-session', [WorldpayController::class, 'createSession']);
+Route::post('/payments/worldpay/webhook', [WorldpayController::class, 'webhook']);
+
 Route::prefix('v1')->group(function () {
     
     // 0. Public Terms & Conditions
@@ -33,6 +37,7 @@ Route::prefix('v1')->group(function () {
     Route::post('/auth/login', [AuthController::class, 'login']);
 
     // 2. Public Worldpay Webhooks & Simulation
+    Route::post('/payments/worldpay/create-session', [WorldpayController::class, 'createSession']);
     Route::post('/payments/worldpay/webhook', [WorldpayController::class, 'webhook']);
     Route::post('/payments/worldpay/simulate', [WorldpayController::class, 'simulate']);
 
